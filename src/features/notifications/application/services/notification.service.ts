@@ -3,6 +3,8 @@ import { createHandler } from "@/core/infrastructure/lib/handler.wrapper,";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 import { INotificationService } from "../../domain/ports/notification-service.port";
 import { NotificationApiAdapter } from "../../infrastructure/adapters/notification-api.adapter";
+import { NotificationEmailService } from "./notification-email.service";
+import { NotificationUtilsService } from "./notification-utils.service";
 import {
   CreateRoute,
   DeleteRoute,
@@ -19,11 +21,15 @@ import { PgUserRepository } from "@/users/infrastructure/adapters/user.repositor
 export class NotificationService implements INotificationService {
   private static instance: NotificationService;
   private userRepository: PgUserRepository;
+  private notificationEmailService: NotificationEmailService;
+  private notificationUtils: NotificationUtilsService;
 
   constructor(
     private readonly notificationRepository: INotificationRepository,
   ) {
     this.userRepository = PgUserRepository.getInstance();
+    this.notificationEmailService = NotificationEmailService.getInstance();
+    this.notificationUtils = NotificationUtilsService.getInstance(notificationRepository);
   }
 
   public static getInstance(
@@ -128,6 +134,7 @@ export class NotificationService implements INotificationService {
 
   create = createHandler<CreateRoute>(async (c) => {
     const data = c.req.valid("json");
+    const sendEmail = data.send_email !== undefined ? data.send_email : true;
 
     const user = await this.userRepository.findById(data.user_id);
     if (!user) {
@@ -150,6 +157,16 @@ export class NotificationService implements INotificationService {
       type: data.type,
       expiresAt: data.expires_at || null,
     });
+
+    // Send email notification if requested
+    if (sendEmail) {
+      try {
+        await this.notificationEmailService.sendNotificationEmail(notification);
+      } catch (error) {
+        console.error('Error sending notification email:', error);
+        // Continue even if email fails
+      }
+    }
 
     return c.json(
       {
