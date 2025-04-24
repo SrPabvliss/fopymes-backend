@@ -10,6 +10,7 @@ import scheduledTransactions from "@/scheduled-transactions/infrastructure/contr
 import debts from "@/debts/infrastructure/controllers/debt.controller";
 import friends from "@/friends/infrastructure/controllers/friend.controller";
 import auth from "@/auth/infrastructure/controllers/auth.controller";
+import categories from "@/categories/infrastructure/controllers/category.controller";
 import DatabaseConnection from "@/db";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 import { cors } from "hono/cors";
@@ -30,6 +31,7 @@ const routes = [
 	scheduledTransactions,
 	debts,
 	friends,
+	categories,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
