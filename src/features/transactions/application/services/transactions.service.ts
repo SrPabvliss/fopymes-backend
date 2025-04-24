@@ -180,7 +180,7 @@ export class TransactionService implements ITransactionService {
 			userId: data.user_id,
 			amount: data.amount,
 			type: data.type,
-			categoryId: data.category_id || 0,
+			categoryId: data.category_id || null,
 			description: data.description,
 			paymentMethodId: data.payment_method_id,
 			scheduledTransactionId: data.scheduled_transaction_id,
@@ -242,7 +242,7 @@ export class TransactionService implements ITransactionService {
 			{
 				amount: data.amount,
 				type: data.type,
-				categoryId: data.category_id || 0,
+				categoryId: data.category_id,
 				description: data.description,
 				paymentMethodId: data.payment_method_id,
 				scheduledTransactionId: data.scheduled_transaction_id,
