@@ -8,7 +8,7 @@ export const selectGoalContributionScheduleSchema = createSelectSchema(goal_cont
 export const createGoalContributionScheduleSchema = goalContributionScheduleBaseSchema
   .extend({
     amount: z.number().positive("Amount must be positive"),
-    scheduled_date: z.string().date(),
+    scheduled_date: z.coerce.date(),
     status: z.enum(["pending", "completed", "skipped"]).default("pending"),
   })
   .omit({
@@ -19,7 +19,7 @@ export const createGoalContributionScheduleSchema = goalContributionScheduleBase
 export const updateGoalContributionScheduleSchema = goalContributionScheduleBaseSchema
   .extend({
     amount: z.number().positive("Amount must be positive").optional(),
-    scheduled_date: z.string().date().optional(),
+    scheduled_date: z.coerce.date().optional(),
     status: z.enum(["pending", "completed", "skipped"]).optional(),
   })
   .partial()

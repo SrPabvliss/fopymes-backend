@@ -12,6 +12,7 @@ import friends from "@/friends/infrastructure/controllers/friend.controller";
 import auth from "@/auth/infrastructure/controllers/auth.controller";
 import categories from "@/categories/infrastructure/controllers/category.controller";
 import goalContributions from "@/goals/infrastucture/controllers/goal-contribution.controller";
+import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-contribution-schedule.controller";
 import DatabaseConnection from "@/db";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 import { cors } from "hono/cors";
@@ -53,18 +54,19 @@ const logBodyMiddleware = createMiddleware(async (c, next) => {
 app.use(logBodyMiddleware);
 
 const routes = [
-  index,
-  auth,
-  users,
-  paymentMethods,
-  transactions,
-  goals,
-  budgets,
-  scheduledTransactions,
-  debts,
-  friends,
-  categories,
-  goalContributions,
+	index,
+	auth,
+	users,
+	paymentMethods,
+	transactions,
+	goals,
+	budgets,
+	scheduledTransactions,
+	debts,
+	friends,
+	categories,
+	goalContributions,
+	goalContributionSchedules,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
