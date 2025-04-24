@@ -11,6 +11,8 @@ import debts from "@/debts/infrastructure/controllers/debt.controller";
 import friends from "@/friends/infrastructure/controllers/friend.controller";
 import auth from "@/auth/infrastructure/controllers/auth.controller";
 import categories from "@/categories/infrastructure/controllers/category.controller";
+import goalContributions from "@/goals/infrastucture/controllers/goal-contribution.controller";
+import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-contribution-schedule.controller";
 import DatabaseConnection from "@/db";
 import email from "@/email/infrastructure/controllers/email.controller";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
@@ -64,6 +66,8 @@ const routes = [
   debts,
   friends,
   categories,
+  goalContributions,
+  goalContributionSchedules,
   email,
 ] as const;
 
