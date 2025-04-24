@@ -1,132 +1,156 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import DatabaseConnection from "@/core/infrastructure/database";
-import { goals } from "@/schema";
+import { goal_contributions, goals } from "@/schema";
 import { IGoalRepository } from "@/goals/domain/ports/goal-repository.port";
 import { IGoal } from "@/goals/domain/entities/IGoal";
 
 export class PgGoalRepository implements IGoalRepository {
-	private db = DatabaseConnection.getInstance().db;
-	private static instance: PgGoalRepository;
+  private db = DatabaseConnection.getInstance().db;
+  private static instance: PgGoalRepository;
 
-	private constructor() {}
+  private constructor() {}
 
-	public static getInstance(): PgGoalRepository {
-		if (!PgGoalRepository.instance) {
-			PgGoalRepository.instance = new PgGoalRepository();
-		}
-		return PgGoalRepository.instance;
-	}
+  public static getInstance(): PgGoalRepository {
+    if (!PgGoalRepository.instance) {
+      PgGoalRepository.instance = new PgGoalRepository();
+    }
+    return PgGoalRepository.instance;
+  }
 
-	async findAll(): Promise<IGoal[]> {
-		const result = await this.db.select().from(goals);
-		return result.map(this.mapToEntity);
-	}
+  async findAll(): Promise<IGoal[]> {
+    const result = await this.db.select().from(goals);
+    return result.map(this.mapToEntity);
+  }
 
-	async findById(id: number): Promise<IGoal | null> {
-		const result = await this.db.select().from(goals).where(eq(goals.id, id));
+  async findAllWithLastContributionWithMoreThanOneWeekAgo(): Promise<IGoal[]> {
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-		return result[0] ? this.mapToEntity(result[0]) : null;
-	}
+    const result = await this.db
+      .select({
+        goal: goals,
+        latestContribution: sql`MAX(${goal_contributions.date})`,
+      })
+      .from(goals)
+      .leftJoin(goal_contributions, eq(goals.id, goal_contributions.goal_id))
+      .groupBy(goals.id)
+      .having(
+        sql`MAX(${goal_contributions.date}) < ${oneWeekAgo} OR MAX(${goal_contributions.date}) IS NULL`
+      );
 
-	async findByUserId(userId: number): Promise<IGoal[]> {
-		const result = await this.db
-			.select()
-			.from(goals)
-			.where(eq(goals.user_id, userId));
+    return result.map((row) => this.mapToEntity(row.goal));
+  }
 
-		return result.map(this.mapToEntity);
-	}
+  async findById(id: number): Promise<IGoal | null> {
+    const result = await this.db.select().from(goals).where(eq(goals.id, id));
 
-	async findSharedWithUser(userId: number): Promise<IGoal[]> {
-		const result = await this.db
-			.select()
-			.from(goals)
-			.where(eq(goals.shared_user_id, userId));
+    return result[0] ? this.mapToEntity(result[0]) : null;
+  }
 
-		return result.map(this.mapToEntity);
-	}
+  async findByUserId(userId: number): Promise<IGoal[]> {
+    const result = await this.db
+      .select()
+      .from(goals)
+      .where(eq(goals.user_id, userId));
 
-	async create(goalData: Omit<IGoal, "id">): Promise<IGoal> {
-		const result = await this.db
-			.insert(goals)
-			.values({
-				user_id: goalData.userId,
-				shared_user_id: goalData.sharedUserId,
-				name: goalData.name,
-				target_amount: goalData.targetAmount.toString(),
-				current_amount: goalData.currentAmount.toString(),
-				end_date: goalData.endDate,
-				category_id: goalData.categoryId,
-				contribution_frequency: goalData.contributionFrequency,
-				contribution_amount: goalData.contributionAmount.toString(),
-			})
-			.returning();
+    return result.map(this.mapToEntity);
+  }
 
-		return this.mapToEntity(result[0]);
-	}
+  async findSharedWithUser(userId: number): Promise<IGoal[]> {
+    const result = await this.db
+      .select()
+      .from(goals)
+      .where(eq(goals.shared_user_id, userId));
 
-	async update(id: number, goalData: Partial<IGoal>): Promise<IGoal> {
-		const updateData: Record<string, any> = {};
+    return result.map(this.mapToEntity);
+  }
 
-		if (goalData.name !== undefined) updateData.name = goalData.name;
-		if (goalData.targetAmount !== undefined)
-			updateData.target_amount = goalData.targetAmount.toString();
-		if (goalData.currentAmount !== undefined)
-			updateData.current_amount = goalData.currentAmount.toString();
-		if (goalData.endDate !== undefined)
-			updateData.end_date = goalData.endDate.toISOString();
-		if (goalData.sharedUserId !== undefined)
-			updateData.shared_user_id = goalData.sharedUserId;
-		if (goalData.categoryId !== undefined)
-			updateData.category_id = goalData.categoryId;
+  async create(goalData: Omit<IGoal, "id">): Promise<IGoal> {
+    const result = await this.db
+      .insert(goals)
+      .values({
+        user_id: goalData.userId,
+        shared_user_id: goalData.sharedUserId,
+        name: goalData.name,
+        target_amount: goalData.targetAmount.toString(),
+        current_amount: goalData.currentAmount.toString(),
+        end_date: goalData.endDate,
+        category_id: goalData.categoryId,
+        contribution_frequency: goalData.contributionFrequency,
+        contribution_amount: goalData.contributionAmount.toString(),
+      })
+      .returning();
 
-		const result = await this.db
-			.update(goals)
-			.set(updateData)
-			.where(eq(goals.id, id))
-			.returning();
+    return this.mapToEntity(result[0]);
+  }
 
-		return this.mapToEntity(result[0]);
-	}
+  async update(id: number, goalData: Partial<IGoal>): Promise<IGoal> {
+    const updateData: Record<string, any> = {};
 
-	async delete(id: number): Promise<boolean> {
-		const result = await this.db
-			.delete(goals)
-			.where(eq(goals.id, id))
-			.returning();
+    if (goalData.name !== undefined) updateData.name = goalData.name;
+    if (goalData.targetAmount !== undefined)
+      updateData.target_amount = goalData.targetAmount.toString();
+    if (goalData.currentAmount !== undefined)
+      updateData.current_amount = goalData.currentAmount.toString();
+    if (goalData.endDate !== undefined)
+      updateData.end_date = goalData.endDate.toISOString();
+    if (goalData.sharedUserId !== undefined)
+      updateData.shared_user_id = goalData.sharedUserId;
+    if (goalData.categoryId !== undefined)
+      updateData.category_id = goalData.categoryId;
+    if (goalData.contributionAmount !== undefined)
+      updateData.contribution_amount = goalData.contributionAmount.toString();
+    if (goalData.contributionFrequency !== undefined)
+      updateData.contribution_frequency = goalData.contributionFrequency;
 
-		return result.length > 0;
-	}
+    const result = await this.db
+      .update(goals)
+      .set(updateData)
+      .where(eq(goals.id, id))
+      .returning();
 
-	async updateProgress(id: number, amount: number): Promise<IGoal> {
-		const goal = await this.findById(id);
-		if (!goal) throw new Error("Goal not found");
+    return this.mapToEntity(result[0]);
+  }
 
-		const newAmount = goal.currentAmount + amount;
+  async delete(id: number): Promise<boolean> {
+    const result = await this.db
+      .delete(goals)
+      .where(eq(goals.id, id))
+      .returning();
 
-		const result = await this.db
-			.update(goals)
-			.set({
-				current_amount: newAmount.toString(),
-			})
-			.where(eq(goals.id, id))
-			.returning();
+    return result.length > 0;
+  }
 
-		return this.mapToEntity(result[0]);
-	}
+  async updateProgress(id: number, amount: number): Promise<IGoal> {
+    const goal = await this.findById(id);
+    if (!goal) throw new Error("Goal not found");
 
-	private mapToEntity(raw: any): IGoal {
-		return {
-			id: raw.id,
-			userId: raw.user_id,
-			sharedUserId: raw.shared_user_id,
-			name: raw.name,
-			targetAmount: Number(raw.target_amount),
-			currentAmount: Number(raw.current_amount),
-			endDate: new Date(raw.end_date),
-			categoryId: raw.category_id,
-			contributionFrequency: raw.contribution_frequency,
-			contributionAmount: raw.contribution_amount,	
-		};
-	}
+    const newAmount = goal.currentAmount + amount;
+
+    const result = await this.db
+      .update(goals)
+      .set({
+        current_amount: newAmount.toString(),
+      })
+      .where(eq(goals.id, id))
+      .returning();
+
+    return this.mapToEntity(result[0]);
+  }
+
+  private mapToEntity(raw: any): IGoal {
+    return {
+      id: raw.id || raw.goals?.id,
+      userId: raw.user_id || raw.goals?.user_id,
+      sharedUserId: raw.shared_user_id || raw.goals?.shared_user_id,
+      name: raw.name || raw.goals?.name,
+      targetAmount: Number(raw.target_amount || raw.goals?.target_amount),
+      currentAmount: Number(raw.current_amount || raw.goals?.current_amount),
+      endDate: new Date(raw.end_date || raw.goals?.end_date),
+      categoryId: raw.category_id || raw.goals?.category_id,
+      contributionFrequency:
+        raw.contribution_frequency || raw.goals?.contribution_frequency,
+      contributionAmount:
+        raw.contribution_amount || raw.goals?.contribution_amount,
+    };
+  }
 }

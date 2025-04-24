@@ -16,6 +16,7 @@ import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-co
 import DatabaseConnection from "@/db";
 import email from "@/email/infrastructure/controllers/email.controller";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
+import { recalculateContributionAmountCron } from "./core/infrastructure/cron/recalculate-contribution-amount.cron";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
@@ -23,6 +24,7 @@ import { createMiddleware } from "hono/factory";
 const app = createApp();
 
 startScheduledTransactionsJob();
+recalculateContributionAmountCron.start();
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
