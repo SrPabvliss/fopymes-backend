@@ -14,6 +14,9 @@ import {
 	UpdateRoute,
 } from "@/goals/infrastucture/controllers/goal.routes";
 import { GoalApiAdapter } from "@/goals/infrastucture/adapters/goal-api.adapter";
+import { GoalScheduleGeneratorService } from "./goal-schedule-generator.service";
+import { PgGoalContributionScheduleRepository } from "@/goals/infrastucture/adapters/goal-contribution-schedule.repository";
+import { IGoal } from "@/goals/domain/entities/IGoal";
 
 export class GoalService implements IGoalService {
 	private static instance: GoalService;
@@ -164,6 +167,12 @@ export class GoalService implements IGoalService {
 			contributionAmount: data.contribution_amount || 0,
 		});
 
+		const scheduleGenerator = GoalScheduleGeneratorService.getInstance(
+			PgGoalContributionScheduleRepository.getInstance()
+		  );
+		
+		await scheduleGenerator.generateSchedules(goal);
+
 		return c.json(
 			{
 				success: true,
@@ -211,7 +220,11 @@ export class GoalService implements IGoalService {
 			}
 		}
 
-		const updateData: Partial<any> = {};
+		const updateData: Partial<IGoal> = {
+			categoryId: data.category_id,
+    		contributionFrequency: data.contribution_frequency,
+    		contributionAmount: data.contribution_amount,
+		};
 
 		if (data.name !== undefined) updateData.name = data.name;
 		if (data.target_amount !== undefined)
@@ -227,6 +240,19 @@ export class GoalService implements IGoalService {
 			Number(id),
 			updateData
 		);
+
+		if (
+			data.target_amount !== undefined || 
+			data.current_amount !== undefined ||
+			data.contribution_frequency !== undefined ||
+			data.contribution_amount !== undefined ||
+			data.end_date !== undefined
+		) {
+			const scheduleGenerator = GoalScheduleGeneratorService.getInstance(
+			  PgGoalContributionScheduleRepository.getInstance()
+			);
+			await scheduleGenerator.recalculateSchedules(updatedGoal);
+		}
 
 		return c.json(
 			{
