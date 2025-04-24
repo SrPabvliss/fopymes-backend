@@ -37,6 +37,11 @@ export class BrevoEmailAdapter extends AbstractEmailService {
    */
   async sendEmail(email: IEmail): Promise<boolean> {
     try {
+      // Validate that either html or text content is provided
+      if (!email.html && !email.text) {
+        throw new Error("Either of htmlContent or textContent is required");
+      }
+
       const preparedEmail = this.prepareEmail(email);
       const sendSmtpEmail = this.mapToBrevoEmail(preparedEmail);
 

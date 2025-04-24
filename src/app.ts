@@ -12,6 +12,7 @@ import friends from "@/friends/infrastructure/controllers/friend.controller";
 import auth from "@/auth/infrastructure/controllers/auth.controller";
 import categories from "@/categories/infrastructure/controllers/category.controller";
 import DatabaseConnection from "@/db";
+import email from "@/email/infrastructure/controllers/email.controller";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -63,6 +64,7 @@ const routes = [
   debts,
   friends,
   categories,
+  email,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
