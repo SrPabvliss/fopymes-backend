@@ -14,38 +14,69 @@ import categories from "@/categories/infrastructure/controllers/category.control
 import DatabaseConnection from "@/db";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { createMiddleware } from "hono/factory";
 
 const app = createApp();
 
 startScheduledTransactionsJob();
 configureOpenAPI(app);
 
+// agrega logs a la app, que logguee tambien el body de requests
+app.use(logger());
+
+// Custom middleware para loguear el body de los requests
+const logBodyMiddleware = createMiddleware(async (c, next) => {
+  // Clonar el request para poder leer el body sin consumirlo
+  const clonedReq = c.req.raw.clone();
+  let body = "";
+
+  try {
+    // Intentar leer el body como JSON
+    const contentType = c.req.header("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const bodyText = await clonedReq.text();
+      if (bodyText) {
+        body = bodyText;
+        console.log(`Request Body: ${body}`);
+      }
+    }
+  } catch (e) {
+    // Si hay error al leer el body, ignorar
+    console.error("Error reading request body:", e);
+  }
+
+  await next();
+});
+
+app.use(logBodyMiddleware);
+
 const routes = [
-	index,
-	auth,
-	users,
-	paymentMethods,
-	transactions,
-	goals,
-	budgets,
-	scheduledTransactions,
-	debts,
-	friends,
-	categories,
+  index,
+  auth,
+  users,
+  paymentMethods,
+  transactions,
+  goals,
+  budgets,
+  scheduledTransactions,
+  debts,
+  friends,
+  categories,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
-	const db = DatabaseConnection.getInstance();
-	return c.json({
-		poolStatus: db.getPoolStatus(),
-		timestamp: new Date().toISOString(),
-	});
+  const db = DatabaseConnection.getInstance();
+  return c.json({
+    poolStatus: db.getPoolStatus(),
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use(cors());
 
 routes.forEach((route) => {
-	app.route("/", route);
+  app.route("/", route);
 });
 
 export type AppType = (typeof routes)[number];
