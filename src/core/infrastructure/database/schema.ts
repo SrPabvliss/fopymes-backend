@@ -88,8 +88,8 @@ export const goals = pgTable("goals", {
     current_amount: decimal("current_amount", { precision: 10, scale: 2 })
         .default("0")
         .notNull(),
-    end_date: date("end_date").notNull(),
-    contribution_frequency: integer("contribution_frequency").notNull(), // Days between contributions
+    end_date: timestamp("end_date").notNull(),
+    contribution_frequency: integer("contribution_frequency").notNull(),
     contribution_amount: decimal("contribution_amount", {
         precision: 10,
         scale: 2,
@@ -145,7 +145,7 @@ export const budgets = pgTable("budgets", {
     current_amount: decimal("current_amount", { precision: 10, scale: 2 })
         .default("0")
         .notNull(),
-    month: date("month").notNull(),
+    month: timestamp("month").notNull(),
 }, (table) => {
     return {
         user_idx: index("budget_user_idx").on(table.user_id),
@@ -167,7 +167,7 @@ export const scheduled_transactions = pgTable("scheduled_transactions", {
         () => payment_methods.id
     ),
     frequency: varchar("frequency").notNull(),
-    next_execution_date: date("next_execution_date").notNull(),
+    next_execution_date: timestamp("next_execution_date").notNull(),
     active: boolean("active").default(true).notNull(),
 }, (table) => {
     return {
@@ -208,7 +208,7 @@ export const debts = pgTable("debts", {
         precision: 10,
         scale: 2,
     }).notNull(),
-    due_date: date("due_date").notNull(),
+    due_date: timestamp("due_date").notNull(),
     paid: boolean("paid").default(false).notNull(),
     creditor_id: integer("creditor_id").references(() => users.id),
     category_id: integer("category_id").references(() => categories.id),

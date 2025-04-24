@@ -78,7 +78,7 @@ export class PgBudgetRepository implements IBudgetRepository {
 			.values({
 				user_id: budgetData.userId,
 				shared_user_id: budgetData.sharedUserId || null,
-				category: budgetData.category,
+				category_id: budgetData.categoryId,
 				limit_amount: budgetData.limitAmount.toString(),
 				current_amount: budgetData.currentAmount.toString(),
 				month: budgetData.month.toISOString(),
@@ -91,8 +91,8 @@ export class PgBudgetRepository implements IBudgetRepository {
 	async update(id: number, budgetData: Partial<IBudget>): Promise<IBudget> {
 		const updateData: Record<string, any> = {};
 
-		if (budgetData.category !== undefined)
-			updateData.category = budgetData.category;
+		if (budgetData.categoryId !== undefined)
+			updateData.category_id = budgetData.categoryId;
 		if (budgetData.limitAmount !== undefined)
 			updateData.limit_amount = budgetData.limitAmount.toString();
 		if (budgetData.currentAmount !== undefined)
@@ -142,7 +142,7 @@ export class PgBudgetRepository implements IBudgetRepository {
 			id: raw.id,
 			userId: raw.user_id,
 			sharedUserId: raw.shared_user_id,
-			category: raw.category,
+			categoryId: raw.category_id,
 			limitAmount: Number(raw.limit_amount),
 			currentAmount: Number(raw.current_amount),
 			month: new Date(raw.month),

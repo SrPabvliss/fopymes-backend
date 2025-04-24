@@ -7,4 +7,5 @@ export interface IDebt {
 	dueDate: Date;
 	paid: boolean;
 	creditorId?: number | null;
+	categoryId?: number | null;
 }

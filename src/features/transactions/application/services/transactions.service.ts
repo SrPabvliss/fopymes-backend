@@ -180,7 +180,7 @@ export class TransactionService implements ITransactionService {
 			userId: data.user_id,
 			amount: data.amount,
 			type: data.type,
-			category: data.category,
+			categoryId: data.category_id || 0,
 			description: data.description,
 			paymentMethodId: data.payment_method_id,
 			scheduledTransactionId: data.scheduled_transaction_id,
@@ -242,11 +242,12 @@ export class TransactionService implements ITransactionService {
 			{
 				amount: data.amount,
 				type: data.type,
-				category: data.category,
+				categoryId: data.category_id || 0,
 				description: data.description,
 				paymentMethodId: data.payment_method_id,
 				scheduledTransactionId: data.scheduled_transaction_id,
 				debtId: data.debt_id,
+				contributionId: data.contribution_id,
 			}
 		);
 
@@ -346,7 +347,10 @@ export class TransactionService implements ITransactionService {
 		return c.json(
 			{
 				success: true,
-				data: totals,
+				data: totals.map((t) => ({
+					category: t.categoryId.toString(),
+					total: t.total,
+				})),
 				message: "Category totals retrieved successfully",
 			},
 			HttpStatusCodes.OK
@@ -378,7 +382,11 @@ export class TransactionService implements ITransactionService {
 			return c.json(
 				{
 					success: true,
-					data: trends,
+					data: trends.map((t) => ({
+						month: t.month,
+						income: t.income,
+						expense: t.expense,
+					})),
 					message: "Monthly trends retrieved successfully",
 				},
 				HttpStatusCodes.OK

@@ -11,12 +11,13 @@ export class TransactionApiAdapter {
 			user_id: transaction.userId,
 			amount: transaction.amount.toString(),
 			type: transaction.type,
-			category: transaction.category,
+			category_id: transaction.categoryId || null,
 			description: transaction.description || null,
 			payment_method_id: transaction.paymentMethodId || null,
 			date: transaction.date,
 			scheduled_transaction_id: transaction.scheduledTransactionId || null,
 			debt_id: transaction.debtId || null,
+			contribution_id: transaction.contributionId || null,
 		};
 	}
 

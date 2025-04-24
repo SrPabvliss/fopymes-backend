@@ -54,9 +54,10 @@ export class PgDebtRepository implements IDebtRepository {
 				description: debtData.description,
 				original_amount: debtData.originalAmount.toString(),
 				pending_amount: debtData.pendingAmount.toString(),
-				due_date: debtData.dueDate.toISOString(),
+				due_date: debtData.dueDate,
 				paid: debtData.paid,
 				creditor_id: debtData.creditorId || null,
+				category_id: debtData.categoryId || null,
 			})
 			.returning();
 
@@ -118,9 +119,10 @@ export class PgDebtRepository implements IDebtRepository {
 			description: raw.description,
 			originalAmount: Number(raw.original_amount),
 			pendingAmount: Number(raw.pending_amount),
-			dueDate: new Date(raw.due_date),
+			dueDate: raw.due_date,
 			paid: raw.paid,
 			creditorId: raw.creditor_id || null,
+			categoryId: raw.category_id || null,
 		};
 	}
 }

@@ -6,4 +6,7 @@ export interface IGoal {
 	targetAmount: number;
 	currentAmount: number;
 	endDate: Date;
+	contributionFrequency: number;
+	contributionAmount: number;
+	categoryId?: number | null;
 }

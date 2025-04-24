@@ -7,26 +7,18 @@ export const scheduledTransactionBaseSchema = createInsertSchema(
 );
 export const selectScheduledTransactionSchema = createSelectSchema(
 	scheduled_transactions
-);
+).transform((data) => ({
+	...data,
+	amount: Number(data.amount),
+}));
 
-const TRANSACTION_CATEGORIES = [
-	"FOOD",
-	"TRANSPORT",
-	"UTILITIES",
-	"ENTERTAINMENT",
-	"HEALTHCARE",
-	"EDUCATION",
-	"SHOPPING",
-	"HOUSING",
-	"OTHER",
-] as const;
 
 const FREQUENCIES = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] as const;
 
 export const createScheduledTransactionSchema = scheduledTransactionBaseSchema
 	.extend({
 		frequency: z.enum(FREQUENCIES),
-		category: z.enum(TRANSACTION_CATEGORIES),
+		categoryId: z.number().int().positive().optional(),
 		amount: z.number().positive("Amount must be positive"),
 		description: z.string().optional(),
 		payment_method_id: z.number().optional(),
@@ -40,7 +32,7 @@ export const createScheduledTransactionSchema = scheduledTransactionBaseSchema
 export const updateScheduledTransactionSchema = scheduledTransactionBaseSchema
 	.extend({
 		frequency: z.enum(FREQUENCIES).optional(),
-		category: z.enum(TRANSACTION_CATEGORIES).optional(),
+		categoryId: z.number().int().positive().optional(),
 		amount: z.number().positive("Amount must be positive").optional(),
 		description: z.string().optional().nullable(),
 		payment_method_id: z.number().optional().nullable(),

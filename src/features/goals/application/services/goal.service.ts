@@ -125,7 +125,6 @@ export class GoalService implements IGoalService {
 	create = createHandler<CreateRoute>(async (c) => {
 		const data = c.req.valid("json");
 
-		// Validar usuario
 		const userValidation = await this.goalUtils.validateUser(data.user_id);
 		if (!userValidation.isValid) {
 			return c.json(
@@ -138,7 +137,6 @@ export class GoalService implements IGoalService {
 			);
 		}
 
-		// Validar usuario compartido si existe
 		if (data.shared_user_id) {
 			const sharedUserValidation = await this.goalUtils.validateUser(
 				data.shared_user_id
@@ -162,6 +160,8 @@ export class GoalService implements IGoalService {
 			targetAmount: Number(data.target_amount),
 			currentAmount: Number(data.current_amount || 0),
 			endDate: new Date(data.end_date),
+			contributionFrequency: data.contribution_frequency || 0,
+			contributionAmount: data.contribution_amount || 0,
 		});
 
 		return c.json(
@@ -190,7 +190,6 @@ export class GoalService implements IGoalService {
 			);
 		}
 
-		// Validar compartición si se está actualizando
 		if (data.shared_user_id !== undefined) {
 			if (data.shared_user_id !== null) {
 				const validation = await this.goalUtils.validateSharing(

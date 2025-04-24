@@ -1,12 +1,7 @@
-import { z } from "zod";
-import {
-	FriendResponse,
-	selectFriendSchema,
-} from "@/friends/application/dtos/friend.dto";
+import { FriendResponse } from "@/friends/application/dtos/friend.dto";
 import { IFriend } from "@/friends/domain/entities/IFriend";
 import { IUserRepository } from "@/users/domain/ports/user-repository.port";
 
-// En friend-api.adapter.ts
 export class FriendApiAdapter {
 	static async toApiResponse(
 		friendship: IFriend,
@@ -23,7 +18,7 @@ export class FriendApiAdapter {
 				email: friend!.email,
 			},
 			user_id: friendship.userId,
-			connection_date: friendship.connectionDate.toISOString(),
+			connection_date: friendship.connectionDate,
 		};
 	}
 

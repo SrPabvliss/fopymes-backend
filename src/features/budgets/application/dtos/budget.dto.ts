@@ -5,21 +5,9 @@ import { z } from "zod";
 export const budgetBaseSchema = createInsertSchema(budgets);
 export const selectBudgetSchema = createSelectSchema(budgets);
 
-const BUDGET_CATEGORIES = [
-	"FOOD",
-	"TRANSPORT",
-	"UTILITIES",
-	"ENTERTAINMENT",
-	"HEALTHCARE",
-	"EDUCATION",
-	"SHOPPING",
-	"HOUSING",
-	"OTHER",
-] as const;
-
 export const createBudgetSchema = budgetBaseSchema
 	.extend({
-		category: z.enum(BUDGET_CATEGORIES),
+		category_id: z.number().int().positive(),
 		limit_amount: z.number().positive("Limit amount must be positive"),
 		current_amount: z
 			.number()
@@ -34,7 +22,7 @@ export const createBudgetSchema = budgetBaseSchema
 
 export const updateBudgetSchema = budgetBaseSchema
 	.extend({
-		category: z.enum(BUDGET_CATEGORIES).optional(),
+		category_id: z.number().int().positive().optional(),
 		limit_amount: z
 			.number()
 			.positive("Limit amount must be positive")

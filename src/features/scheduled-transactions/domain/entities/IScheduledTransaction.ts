@@ -3,7 +3,7 @@ export interface IScheduledTransaction {
 	userId: number;
 	name: string;
 	amount: number;
-	category: string;
+	categoryId?: number | null;
 	description?: string | null;
 	paymentMethodId?: number | null;
 	frequency: string;

@@ -67,7 +67,7 @@ export class PgScheduledTransactionRepository
 				user_id: scheduledData.userId,
 				name: scheduledData.name,
 				amount: scheduledData.amount.toString(),
-				category: scheduledData.category,
+				category_id: scheduledData.categoryId || null,
 				description: scheduledData.description || null,
 				payment_method_id: scheduledData.paymentMethodId || null,
 				frequency: scheduledData.frequency,
@@ -88,8 +88,8 @@ export class PgScheduledTransactionRepository
 		if (scheduledData.name !== undefined) updateData.name = scheduledData.name;
 		if (scheduledData.amount !== undefined)
 			updateData.amount = scheduledData.amount.toString();
-		if (scheduledData.category !== undefined)
-			updateData.category = scheduledData.category;
+		if (scheduledData.categoryId !== undefined)
+			updateData.category_id = scheduledData.categoryId;
 		if (scheduledData.description !== undefined)
 			updateData.description = scheduledData.description;
 		if (scheduledData.paymentMethodId !== undefined)
@@ -126,7 +126,7 @@ export class PgScheduledTransactionRepository
 			userId: raw.user_id,
 			name: raw.name,
 			amount: Number(raw.amount),
-			category: raw.category,
+			categoryId: raw.category_id || null,
 			description: raw.description,
 			paymentMethodId: raw.payment_method_id,
 			frequency: raw.frequency,

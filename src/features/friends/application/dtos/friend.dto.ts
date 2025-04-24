@@ -19,7 +19,7 @@ export interface FriendResponse {
 		email: string;
 	};
 	user_id: number;
-	connection_date: string;
+	connection_date: Date;
 }
 
 export const FriendResponseSchema = z.object({
@@ -31,7 +31,7 @@ export const FriendResponseSchema = z.object({
 		email: z.string(),
 	}),
 	user_id: z.number(),
-	connection_date: z.string(),
+	connection_date: z.coerce.date(),
 });
 
 export type CreateFriendDTO = z.infer<typeof createFriendSchema>;

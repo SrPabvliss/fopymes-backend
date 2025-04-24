@@ -54,7 +54,6 @@ export class GoalUtilsService {
 		isValid: boolean;
 		message?: string;
 	}> {
-		// Verificar que el usuario es el propietario
 		const isOwner = await this.validateOwnership(goalId, userId);
 		if (!isOwner) {
 			return {
@@ -63,7 +62,6 @@ export class GoalUtilsService {
 			};
 		}
 
-		// Verificar que el usuario objetivo existe
 		const targetUserExists = await this.validateUser(targetUserId);
 		if (!targetUserExists.isValid) {
 			return {
@@ -72,7 +70,6 @@ export class GoalUtilsService {
 			};
 		}
 
-		// No permitir compartir con uno mismo
 		if (userId === targetUserId) {
 			return {
 				isValid: false,
@@ -101,7 +98,6 @@ export class GoalUtilsService {
 			};
 		}
 
-		// Verificar si el usuario tiene acceso a la meta
 		if (!(await this.canAccess(goalId, userId))) {
 			return {
 				isValid: false,
@@ -109,7 +105,6 @@ export class GoalUtilsService {
 			};
 		}
 
-		// Validar que el nuevo monto no exceda el objetivo
 		const newAmount = goal.currentAmount + amount;
 		if (newAmount > goal.targetAmount) {
 			return {
@@ -119,7 +114,6 @@ export class GoalUtilsService {
 			};
 		}
 
-		// Verificar si la fecha límite no ha pasado
 		if (new Date(goal.endDate) < new Date()) {
 			return {
 				isValid: false,
