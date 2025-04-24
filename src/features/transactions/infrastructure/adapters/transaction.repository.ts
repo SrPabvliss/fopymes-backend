@@ -4,10 +4,7 @@ import { transactions } from "@/schema";
 import { ITransactionRepository } from "../../domain/ports/transaction-repository.port";
 import { ITransaction } from "../../domain/entities/ITransaction";
 import { TransactionFilters } from "../../application/dtos/transaction.dto";
-import {
-	MonthlyTrendData,
-	MonthlyTrendResult,
-} from "@/transactions/domain/entities/ITrends";
+import { MonthlyTrendData } from "@/transactions/domain/entities/ITrends";
 
 export class PgTransactionRepository implements ITransactionRepository {
 	private db = DatabaseConnection.getInstance().db;
@@ -67,8 +64,8 @@ export class PgTransactionRepository implements ITransactionRepository {
 			conditions.push(eq(transactions.type, filters.type));
 		}
 
-		if (filters.category) {
-			conditions.push(eq(transactions.category, filters.category));
+		if (filters.category_id) {
+			conditions.push(eq(transactions.category_id, filters.category_id));
 		}
 
 		if (filters.payment_method_id) {
@@ -107,7 +104,7 @@ export class PgTransactionRepository implements ITransactionRepository {
 				user_id: transactionData.userId,
 				amount: transactionData.amount.toString(),
 				type: transactionData.type,
-				category: transactionData.category,
+				category_id: transactionData.categoryId,
 				description: transactionData.description || null,
 				payment_method_id: transactionData.paymentMethodId || null,
 				scheduled_transaction_id:
@@ -131,8 +128,8 @@ export class PgTransactionRepository implements ITransactionRepository {
 		if (transactionData.type !== undefined) {
 			updateData.type = transactionData.type;
 		}
-		if (transactionData.category !== undefined) {
-			updateData.category = transactionData.category;
+		if (transactionData.categoryId !== undefined) {
+			updateData.category_id = transactionData.categoryId;
 		}
 		if (transactionData.description !== undefined) {
 			updateData.description = transactionData.description;
@@ -177,7 +174,6 @@ export class PgTransactionRepository implements ITransactionRepository {
 		const year = month.getUTCFullYear();
 		const monthNumber = month.getUTCMonth();
 
-		// Crear fechas en UTC
 		const startDate = new Date(Date.UTC(year, monthNumber, 1));
 		const endDate = new Date(Date.UTC(year, monthNumber + 1, 0));
 
@@ -217,8 +213,7 @@ export class PgTransactionRepository implements ITransactionRepository {
 		userId: number,
 		startDate: Date,
 		endDate: Date
-	): Promise<Array<{ category: string; total: number }>> {
-		// Convertir las fechas a UTC
+	): Promise<Array<{ categoryId: number; total: number }>> {
 		const utcStartDate = new Date(
 			Date.UTC(
 				startDate.getUTCFullYear(),
@@ -239,13 +234,12 @@ export class PgTransactionRepository implements ITransactionRepository {
 			)
 		);
 
-		// Podemos añadir logs para debug
 		console.log("UTC Start date:", utcStartDate.toISOString());
 		console.log("UTC End date:", utcEndDate.toISOString());
 
 		const result = await this.db
 			.select({
-				category: transactions.category,
+				categoryId: transactions.category_id,
 				total: sql<number>`sum(${transactions.amount})`,
 			})
 			.from(transactions)
@@ -255,10 +249,10 @@ export class PgTransactionRepository implements ITransactionRepository {
 					between(transactions.date, utcStartDate, utcEndDate)
 				)
 			)
-			.groupBy(transactions.category);
+			.groupBy(transactions.category_id);
 
 		return result.map((row) => ({
-			category: row.category,
+			categoryId: row.categoryId || 0,
 			total: Number(row.total) || 0,
 		}));
 	}
@@ -268,7 +262,7 @@ export class PgTransactionRepository implements ITransactionRepository {
 			userId: raw.user_id,
 			amount: Number(raw.amount),
 			type: raw.type,
-			category: raw.category,
+			categoryId: raw.category_id,
 			description: raw.description,
 			paymentMethodId: raw.payment_method_id,
 			date: raw.date,
@@ -276,8 +270,6 @@ export class PgTransactionRepository implements ITransactionRepository {
 			debtId: raw.debt_id,
 		};
 	}
-
-	// En transaction.repository.ts, modifiquemos el método getMonthlyTrends:
 
 	async getMonthlyTrends(userId: number): Promise<MonthlyTrendData[]> {
 		console.log("Getting monthly trends for user:", userId);
@@ -305,9 +297,7 @@ export class PgTransactionRepository implements ITransactionRepository {
 
 			const monthlyData: Record<string, MonthlyTrendData> = {};
 
-			// Modificar esta parte para trabajar con el string directamente
 			result.forEach(({ month, type, total }) => {
-				// month ya viene como YYYY-MM-DD, solo necesitamos YYYY-MM
 				const monthKey = month.substring(0, 7);
 
 				if (!monthlyData[monthKey]) {

@@ -32,7 +32,6 @@ export class PgFriendRepository implements IFriendRepository {
 	}
 
 	async findByUserId(userId: number): Promise<IFriend[]> {
-		// Buscamos tanto amistades donde el usuario es user_id como friend_id
 		const result = await this.db
 			.select()
 			.from(friends)
@@ -45,7 +44,6 @@ export class PgFriendRepository implements IFriendRepository {
 		userId: number,
 		friendId: number
 	): Promise<IFriend | null> {
-		// Buscar la amistad en ambas direcciones
 		const result = await this.db
 			.select()
 			.from(friends)

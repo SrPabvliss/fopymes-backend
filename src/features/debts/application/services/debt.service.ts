@@ -137,7 +137,6 @@ export class DebtService implements IDebtService {
 	create = createHandler<CreateRoute>(async (c) => {
 		const data = c.req.valid("json");
 
-		// Validar que el usuario existe
 		const userValidation = await this.debtUtils.validateUser(data.user_id);
 		if (!userValidation.isValid) {
 			return c.json(
@@ -150,7 +149,6 @@ export class DebtService implements IDebtService {
 			);
 		}
 
-		// Validar acreedor solo si se proporciona
 		if (data.creditor_id) {
 			const creditorValidation = await this.debtUtils.validateUser(
 				data.creditor_id
@@ -277,17 +275,15 @@ export class DebtService implements IDebtService {
 
 		const debt = validation.debt!;
 
-		// Crear la transacción de pago
 		await this.transactionRepository.create({
 			userId: Number(userId),
 			amount: amount,
 			type: "EXPENSE",
-			category: "DEBT_PAYMENT",
+			categoryId: debt.categoryId || 0,
 			description: `Payment for debt: ${debt.description}`,
 			debtId: debt.id,
 		});
 
-		// Actualizar el monto pendiente
 		const updatedDebt = await this.debtRepository.updatePendingAmount(
 			debt.id,
 			amount

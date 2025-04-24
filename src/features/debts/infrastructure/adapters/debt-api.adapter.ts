@@ -8,11 +8,12 @@ export class DebtApiAdapter {
 			id: debt.id,
 			user_id: debt.userId,
 			description: debt.description,
-			original_amount: debt.originalAmount.toString(),
-			pending_amount: debt.pendingAmount.toString(),
-			due_date: debt.dueDate.toISOString(),
+			original_amount: debt.originalAmount,
+			pending_amount: debt.pendingAmount,
+			due_date: debt.dueDate,
 			paid: debt.paid,
 			creditor_id: debt.creditorId || null,
+			category_id: debt.categoryId || null,
 		};
 	}
 

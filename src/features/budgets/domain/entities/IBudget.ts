@@ -2,7 +2,7 @@ export interface IBudget {
 	id: number;
 	userId: number;
 	sharedUserId?: number | null;
-	category: string;
+	categoryId: number;
 	limitAmount: number;
 	currentAmount: number;
 	month: Date;

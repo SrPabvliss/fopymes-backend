@@ -189,7 +189,7 @@ export class BudgetService implements IBudgetService {
 		const budget = await this.budgetRepository.create({
 			userId: data.user_id,
 			sharedUserId: data.shared_user_id || null,
-			category: data.category,
+			categoryId: data.category_id,
 			limitAmount: Number(data.limit_amount),
 			currentAmount: Number(data.current_amount || 0),
 			month: new Date(data.month),
@@ -244,7 +244,7 @@ export class BudgetService implements IBudgetService {
 
 		const updateData: Partial<any> = {};
 
-		if (data.category !== undefined) updateData.category = data.category;
+		if (data.category_id !== undefined) updateData.categoryId = data.category_id;
 		if (data.limit_amount !== undefined)
 			updateData.limitAmount = Number(data.limit_amount);
 		if (data.current_amount !== undefined)

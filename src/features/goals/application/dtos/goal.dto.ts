@@ -3,7 +3,12 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const goalBaseSchema = createInsertSchema(goals);
-export const selectGoalSchema = createSelectSchema(goals);
+export const selectGoalSchema = createSelectSchema(goals).transform((data) => ({
+	...data,
+	target_amount: Number(data.target_amount),
+	current_amount: Number(data.current_amount),
+	contribution_amount: Number(data.contribution_amount),
+}));
 
 export const createGoalSchema = goalBaseSchema
 	.extend({
@@ -12,8 +17,11 @@ export const createGoalSchema = goalBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		end_date: z.string().date(),
+		end_date: z.coerce.date(),
 		shared_user_id: z.number().optional(),
+		category_id: z.number().int().optional(),
+		contribution_frequency: z.number().int().positive().optional(),
+		contribution_amount: z.number().positive("Contribution amount must be positive").optional(),
 	})
 	.omit({
 		id: true,
@@ -29,8 +37,11 @@ export const updateGoalSchema = goalBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		end_date: z.string().date().optional(),
+		end_date: z.coerce.date().optional(),
 		shared_user_id: z.number().optional().nullable(),
+		category_id: z.number().int().optional(),
+		contribution_frequency: z.number().int().positive().optional(),
+		contribution_amount: z.number().positive("Contribution amount must be positive").optional(),
 	})
 	.partial()
 	.omit({

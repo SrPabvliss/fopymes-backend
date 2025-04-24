@@ -1,6 +1,6 @@
 {
-  "id": "36d8ccdb-c381-4873-9fa7-a3f6870a6a30",
-  "prevId": "df77b341-2145-46e7-989d-a018a553d0e0",
+  "id": "0a965d94-91f2-4df3-ae13-a2a90268f175",
+  "prevId": "36d8ccdb-c381-4873-9fa7-a3f6870a6a30",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -47,7 +47,7 @@
         },
         "month": {
           "name": "month",
-          "type": "date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
@@ -221,7 +221,7 @@
         },
         "due_date": {
           "name": "due_date",
-          "type": "date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },
@@ -752,7 +752,7 @@
         },
         "end_date": {
           "name": "end_date",
-          "type": "date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },
@@ -1144,7 +1144,7 @@
         },
         "next_execution_date": {
           "name": "next_execution_date",
-          "type": "date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },

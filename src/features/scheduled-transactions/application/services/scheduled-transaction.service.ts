@@ -119,7 +119,6 @@ export class ScheduledTransactionService
 	create = createHandler<CreateRoute>(async (c) => {
 		const data = c.req.valid("json");
 
-		// Validar usuario
 		const userValidation = await this.scheduledTransactionUtils.validateUser(
 			data.user_id
 		);
@@ -134,7 +133,6 @@ export class ScheduledTransactionService
 			);
 		}
 
-		// Si se proporciona un método de pago, validar que existe y pertenece al usuario
 		if (data.payment_method_id) {
 			const paymentMethodValidation =
 				await this.scheduledTransactionUtils.validatePaymentMethod(
@@ -159,7 +157,7 @@ export class ScheduledTransactionService
 				userId: data.user_id,
 				name: data.name,
 				amount: data.amount,
-				category: data.category,
+				categoryId: data.category_id,
 				description: data.description,
 				paymentMethodId: data.payment_method_id,
 				frequency: data.frequency,
@@ -222,7 +220,7 @@ export class ScheduledTransactionService
 
 		if (data.name !== undefined) updateData.name = data.name;
 		if (data.amount !== undefined) updateData.amount = data.amount;
-		if (data.category !== undefined) updateData.category = data.category;
+		if (data.category_id !== undefined) updateData.categoryId = data.category_id;
 		if (data.description !== undefined)
 			updateData.description = data.description;
 		if (data.payment_method_id !== undefined)
@@ -280,7 +278,6 @@ export class ScheduledTransactionService
 		const scheduledTransactions =
 			await this.scheduledTransactionRepository.findPendingExecutions();
 
-		// Ejecutar las transacciones pendientes
 		for (const scheduled of scheduledTransactions) {
 			await this.executeScheduledTransaction(scheduled);
 		}
@@ -312,7 +309,7 @@ export class ScheduledTransactionService
 			userId: scheduled.userId,
 			amount: scheduled.amount,
 			type: "EXPENSE",
-			category: scheduled.category,
+			categoryId: scheduled.categoryId,
 			description: scheduled.description,
 			paymentMethodId: scheduled.paymentMethodId,
 			scheduledTransactionId: scheduled.id,

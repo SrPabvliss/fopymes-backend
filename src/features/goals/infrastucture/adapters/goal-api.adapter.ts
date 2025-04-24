@@ -9,9 +9,12 @@ export class GoalApiAdapter {
 			user_id: goal.userId,
 			shared_user_id: goal.sharedUserId || null,
 			name: goal.name,
-			target_amount: goal.targetAmount.toString(),
-			current_amount: goal.currentAmount.toString(),
-			end_date: goal.endDate.toString(),
+			target_amount: goal.targetAmount,
+			current_amount: goal.currentAmount,
+			end_date: goal.endDate,
+			contribution_frequency: goal.contributionFrequency,
+			contribution_amount: Number(goal.contributionAmount),
+			category_id: goal.categoryId || null,
 		};
 	}
 

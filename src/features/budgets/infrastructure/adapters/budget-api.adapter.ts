@@ -8,7 +8,7 @@ export class BudgetApiAdapter {
 			id: budget.id,
 			user_id: budget.userId,
 			shared_user_id: budget.sharedUserId || null,
-			category: budget.category,
+			category_id: budget.categoryId,
 			limit_amount: budget.limitAmount.toString(),
 			current_amount: budget.currentAmount.toString(),
 			month: budget.month.toISOString(),

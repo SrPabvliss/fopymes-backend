@@ -27,7 +27,7 @@ export interface ITransactionRepository {
 		endDate: Date
 	): Promise<
 		Array<{
-			category: string;
+			categoryId: number;
 			total: number;
 		}>
 	>;

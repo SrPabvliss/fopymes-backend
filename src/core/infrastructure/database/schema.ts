@@ -8,6 +8,7 @@ import {
   decimal,
   text,
   date,
+  index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -23,6 +24,12 @@ export const users = pgTable("users", {
   active: boolean("active").default(true).notNull(),
   recovery_token: varchar("recovery_token"),
   recovery_token_expires: timestamp("recovery_token_expires"),
+});
+
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull().unique(),
+  description: text("description"),
 });
 
 export const payment_methods = pgTable("payment_methods", {

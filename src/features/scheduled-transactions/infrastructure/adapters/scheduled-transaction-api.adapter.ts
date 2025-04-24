@@ -10,12 +10,12 @@ export class ScheduledTransactionApiAdapter {
 			id: scheduledTransaction.id,
 			user_id: scheduledTransaction.userId,
 			name: scheduledTransaction.name,
-			amount: scheduledTransaction.amount.toString(),
-			category: scheduledTransaction.category,
+			amount: scheduledTransaction.amount,
+			category_id: scheduledTransaction.categoryId || null,
 			description: scheduledTransaction.description || null,
 			payment_method_id: scheduledTransaction.paymentMethodId || null,
 			frequency: scheduledTransaction.frequency,
-			next_execution_date: scheduledTransaction.nextExecutionDate.toISOString(),
+			next_execution_date: scheduledTransaction.nextExecutionDate,
 			active: scheduledTransaction.active,
 		};
 	}

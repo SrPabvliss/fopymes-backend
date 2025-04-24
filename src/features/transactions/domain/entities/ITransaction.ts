@@ -3,10 +3,11 @@ export interface ITransaction {
 	userId: number;
 	amount: number;
 	type: "INCOME" | "EXPENSE";
-	category: string;
+	categoryId: number;
 	description?: string | null;
 	paymentMethodId?: number | null;
 	date: Date;
 	scheduledTransactionId?: number | null;
 	debtId?: number | null;
+	contributionId?: number | null;
 }
