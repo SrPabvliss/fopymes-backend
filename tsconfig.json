@@ -8,22 +8,54 @@
 		"target": "esnext",
 		"module": "esnext",
 		"paths": {
-			"@/env": ["./src/core/infrastructure/env/env.ts"],
-			"@/db": ["./src/core/infrastructure/database/index.ts"],
-			"@/schema": ["./src/core/infrastructure/database/schema.ts"],
-			"@/shared/*": ["./src/shared/*"],
-			"@/users/*": ["./src/features/users/*"],
-			"@/auth/*": ["./src/features/auth/*"],
-			"@/payment-methods/*": ["./src/features/payment-methods/*"],
-			"@/transactions/*": ["./src/features/transactions/*"],
-			"@/goals/*": ["./src/features/goals/*"],
-			"@/budgets/*": ["./src/features/budgets/*"],
-			"@/scheduled-transactions/*": ["./src/features/scheduled-transactions/*"],
-			"@/debts/*": ["./src/features/debts/*"],
-			"@/categories/*": ["./src/features/categories/*"],
-			"@/friends/*": ["./src/features/friends/*"],
-			"@/core/*": ["./src/core/*"]
-
+			"@/env": [
+				"./src/core/infrastructure/env/env.ts"
+			],
+			"@/db": [
+				"./src/core/infrastructure/database/index.ts"
+			],
+			"@/schema": [
+				"./src/core/infrastructure/database/schema.ts"
+			],
+			"@/shared/*": [
+				"./src/shared/*"
+			],
+			"@/users/*": [
+				"./src/features/users/*"
+			],
+			"@/auth/*": [
+				"./src/features/auth/*"
+			],
+			"@/payment-methods/*": [
+				"./src/features/payment-methods/*"
+			],
+			"@/transactions/*": [
+				"./src/features/transactions/*"
+			],
+			"@/goals/*": [
+				"./src/features/goals/*"
+			],
+			"@/budgets/*": [
+				"./src/features/budgets/*"
+			],
+			"@/scheduled-transactions/*": [
+				"./src/features/scheduled-transactions/*"
+			],
+			"@/debts/*": [
+				"./src/features/debts/*"
+			],
+			"@/categories/*": [
+				"./src/features/categories/*"
+			],
+			"@/friends/*": [
+				"./src/features/friends/*"
+			],
+			"@/email/*": [
+				"./src/features/email/*"
+			],
+			"@/core/*": [
+				"./src/core/*"
+			]
 		}
 	}
 }
