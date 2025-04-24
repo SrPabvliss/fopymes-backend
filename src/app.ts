@@ -15,6 +15,7 @@ import goalContributions from "@/goals/infrastucture/controllers/goal-contributi
 import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-contribution-schedule.controller";
 import notifications from "@/notifications/infrastructure/controllers/notification.controller";
 import DatabaseConnection from "@/db";
+import email from "@/email/infrastructure/controllers/email.controller";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 import { startNotificationsCleanupJob } from "./core/infrastructure/cron/expired-notifications.cron";
 import { cors } from "hono/cors";
@@ -71,6 +72,7 @@ const routes = [
   goalContributions,
   goalContributionSchedules,
   notifications,
+  email,
 ] as const;
 
 app.get("/debug/db-status", (c) => {

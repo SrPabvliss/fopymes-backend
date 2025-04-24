@@ -50,6 +50,9 @@
 			"@/friends/*": [
 				"./src/features/friends/*"
 			],
+			"@/email/*": [
+				"./src/features/email/*"
+			],
 			"@/core/*": [
 				"./src/core/*"
 			],

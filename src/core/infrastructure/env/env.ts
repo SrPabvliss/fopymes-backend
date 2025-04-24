@@ -40,6 +40,10 @@ const EnvSchema = z
     JWT_SECRET: z
       .string()
       .min(32, "JWT_SECRET must be at least 32 characters long"),
+    // Email configuration
+    BREVO_API_KEY: z.string().optional(),
+    EMAIL_FROM_ADDRESS: z.string().email().optional(),
+    EMAIL_FROM_NAME: z.string().optional(),
   })
   .superRefine((input, ctx) => {
     if (input.NODE_ENV === "production" && !input.DATABASE_AUTH_TOKEN) {
