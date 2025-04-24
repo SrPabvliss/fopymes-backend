@@ -14,6 +14,7 @@ La aplicación ha sido dockerizada utilizando un enfoque multi-etapa:
 1. **Dockerfile**: Contiene la configuración para construir la imagen Docker de la aplicación.
    - Etapa de construcción (`builder`): Instala dependencias y prepara el código.
    - Etapa de producción (`production`): Crea una imagen más ligera con solo lo necesario para ejecutar la aplicación.
+   - Script de entrada (`docker-entrypoint.sh`): Ejecuta automáticamente las migraciones de la base de datos antes de iniciar la aplicación.
 
 2. **docker-compose.yaml**: Orquesta los servicios necesarios:
    - `app`: El servicio de la aplicación backend.
@@ -35,6 +36,11 @@ docker-compose up --build
 ```
 
 Este comando construirá las imágenes necesarias y ejecutará los contenedores. La primera vez que se ejecute, tomará más tiempo mientras se descargan las imágenes base y se instalan las dependencias.
+
+**Nota**: Al iniciar los contenedores, el script de entrada `docker-entrypoint.sh` se ejecutará automáticamente y realizará las siguientes acciones:
+1. Esperar a que la base de datos esté lista
+2. Ejecutar las migraciones de la base de datos (`bun drizzle-kit generate` y `bun drizzle-kit migrate`)
+3. Iniciar la aplicación
 
 Para ejecutar los contenedores en segundo plano (modo detached):
 

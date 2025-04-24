@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   app:
     build:
@@ -20,6 +19,8 @@ services:
   db:
     image: postgres:13
     container_name: ${DATABASE_CONTAINER_NAME}
+    env_file:
+      - .env.docker
     ports:
       - "${DATABASE_PORT}:5432"
     environment:
