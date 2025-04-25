@@ -13,6 +13,8 @@ import {
 } from "@/goals/infrastucture/controllers/goal-contribution.route";
 import { ITransactionRepository } from "@/transactions/domain/ports/transaction-repository.port";
 import { GoalContributionApiAdapter } from "@/goals/infrastucture/adapters/goal-contribution-api.adapter";
+import { BudgetUtilsService } from "@/budgets/application/services/budget-utils.service";
+import { GoalUtilsService } from "./goal-utils.service";
 
 export class GoalContributionService implements IGoalContributionService {
   private static instance: GoalContributionService;
@@ -20,19 +22,22 @@ export class GoalContributionService implements IGoalContributionService {
   constructor(
     private readonly goalContributionRepository: IGoalContributionRepository,
     private readonly goalRepository: IGoalRepository,
-    private readonly transactionRepository: ITransactionRepository
+    private readonly transactionRepository: ITransactionRepository,
+    private readonly goalUtils: GoalUtilsService
   ) {}
 
   public static getInstance(
     goalContributionRepository: IGoalContributionRepository,
     goalRepository: IGoalRepository,
-    transactionRepository: ITransactionRepository
+    transactionRepository: ITransactionRepository,
+    goalUtils: GoalUtilsService
   ): GoalContributionService {
     if (!GoalContributionService.instance) {
       GoalContributionService.instance = new GoalContributionService(
         goalContributionRepository,
         goalRepository,
-        transactionRepository
+        transactionRepository,
+        goalUtils
       );
     }
     return GoalContributionService.instance;
@@ -102,80 +107,89 @@ export class GoalContributionService implements IGoalContributionService {
   });
 
   create = createHandler<CreateRoute>(async (c) => {
-    const data = c.req.valid("json");
+  const data = c.req.valid("json");
+  
+  const goal = await this.goalRepository.findById(data.goal_id);
+  if (!goal) {
+    return c.json(
+      {
+        success: false,
+        data: null,
+        message: "Goal not found",
+      },
+      HttpStatusCodes.NOT_FOUND
+    );
+  }
+
+  if (data.payment_method_id) {
+    const paymentMethodValid = await this.goalUtils.validatePaymentMethod(
+      data.payment_method_id,
+      data.user_id
+    );
     
-    // Verify goal exists
-    const goal = await this.goalRepository.findById(data.goal_id);
-    if (!goal) {
+    if (!paymentMethodValid) {
       return c.json(
         {
           success: false,
           data: null,
-          message: "Goal not found",
+          message: "Invalid payment method",
         },
-        HttpStatusCodes.NOT_FOUND
+        HttpStatusCodes.BAD_REQUEST
       );
     }
+  }
 
-    // Create contribution
-    const contribution = await this.goalContributionRepository.create({
-      goalId: data.goal_id,
-      userId: data.user_id,
-      amount: data.amount,
-    });
-
-    await this.goalRepository.update(goal.id, {
-      currentAmount: goal.currentAmount + data.amount
-    });
-
-    await this.transactionRepository.create({
-      userId: data.user_id,
-      amount: data.amount,
-      type: "EXPENSE",
-      description: `Contribution to goal: ${goal.name}`,
-      contributionId: contribution.id,
-    });
-
-    return c.json(
-      {
-        success: true,
-        data: GoalContributionApiAdapter.toApiResponse(contribution),
-        message: "Goal contribution created successfully",
-      },
-      HttpStatusCodes.CREATED
-    );
+  const contribution = await this.goalContributionRepository.create({
+    goalId: data.goal_id,
+    userId: data.user_id,
+    amount: data.amount,
   });
 
-  delete = createHandler<DeleteRoute>(async (c) => {
-    const id = c.req.param("id");
-    
-    const contribution = await this.goalContributionRepository.findById(Number(id));
-    if (!contribution) {
-      return c.json(
-        {
-          success: false,
-          data: null,
-          message: "Goal contribution not found",
-        },
-        HttpStatusCodes.NOT_FOUND
-      );
-    }
+  await this.goalRepository.updateProgress(goal.id, data.amount);
 
-    const goal = await this.goalRepository.findById(contribution.goalId);
-    if (goal) {
-      await this.goalRepository.update(goal.id, {
-        currentAmount: Math.max(0, goal.currentAmount - contribution.amount)
-      });
-    }
-
-    const deleted = await this.goalContributionRepository.delete(Number(id));
-    return c.json(
-      {
-        success: true,
-        data: { deleted },
-        message: "Goal contribution deleted successfully",
-      },
-      HttpStatusCodes.OK
-    );
+  const transaction = await this.transactionRepository.create({
+    userId: data.user_id,
+    amount: data.amount,
+    type: "EXPENSE",
+    description: data.description || `Contribution to goal: ${goal.name}`,
+    paymentMethodId: data.payment_method_id || null,
+    contributionId: contribution.id,
+    categoryId: goal.categoryId || null,
   });
+
+  return c.json(
+    {
+      success: true,
+      data: GoalContributionApiAdapter.toApiResponse(contribution),
+      message: "Goal contribution created successfully",
+    },
+    HttpStatusCodes.CREATED
+  );
+});
+
+delete = createHandler<DeleteRoute>(async (c) => {
+	const id = c.req.param("id");
+	const contribution = await this.goalContributionRepository.findById(Number(id));
+
+	if (!contribution) {
+		return c.json(
+			{
+				success: false,
+				data: null,
+				message: "Goal contribution not found",
+			},
+			HttpStatusCodes.NOT_FOUND
+		);
+	}
+
+	const deleted = await this.goalContributionRepository.delete(Number(id));
+	return c.json(
+		{
+			success: true,
+			data: { deleted },
+			message: "Goal contribution deleted successfully",
+		},
+		HttpStatusCodes.OK
+	);
+});
 }
