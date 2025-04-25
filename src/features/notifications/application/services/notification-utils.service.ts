@@ -1,4 +1,7 @@
-import { INotification, NotificationType } from "../../domain/entities/INotification";
+import {
+  INotification,
+  NotificationType,
+} from "../../domain/entities/INotification";
 import { INotificationRepository } from "../../domain/ports/notification-repository.port";
 import { NotificationEmailService } from "./notification-email.service";
 import { NotificationSocketService } from "../../infrastructure/websocket/notification-socket.service";
@@ -44,24 +47,28 @@ export class NotificationUtilsService {
       read: false,
       type,
       expiresAt,
+      updatedAt: new Date(),
     });
-    
+
     // Send email notification if requested
     if (sendEmail) {
       try {
         await this.notificationEmailService.sendNotificationEmail(notification);
       } catch (error) {
-        console.error('Error sending notification email:', error);
+        console.error("Error sending notification email:", error);
       }
     }
-    
+
     // Broadcast notification via WebSocket
     try {
-      this.notificationSocketService.broadcastNotification(userId, notification);
+      this.notificationSocketService.broadcastNotification(
+        userId,
+        notification
+      );
     } catch (error) {
-      console.error('Error broadcasting notification via WebSocket:', error);
+      console.error("Error broadcasting notification via WebSocket:", error);
     }
-    
+
     return notification;
   }
 
@@ -93,7 +100,7 @@ export class NotificationUtilsService {
     const daysUntilDue = Math.ceil(
       (dueDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24)
     );
-    
+
     return await this.createNotification(
       userId,
       `Deuda: ${debtDescription}`,

@@ -10,6 +10,7 @@ import {
   date,
   index,
   jsonb,
+  PgTableWithColumns,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -149,27 +150,30 @@ export const goals = pgTable(
   }
 );
 
+// Breaking circular reference by declaring table schema first
+const goalContributionsSchema = {
+  id: serial("id").primaryKey(),
+  goal_id: integer("goal_id")
+    .references(() => goals.id)
+    .notNull(),
+  user_id: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  date: timestamp("date")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  created_at: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updated_at: timestamp("updated_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+};
+
 export const goal_contributions = pgTable(
   "goal_contributions",
-  {
-    id: serial("id").primaryKey(),
-    goal_id: integer("goal_id")
-      .references(() => goals.id)
-      .notNull(),
-    user_id: integer("user_id")
-      .references(() => users.id)
-      .notNull(),
-    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-    date: timestamp("date")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    created_at: timestamp("created_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updated_at: timestamp("updated_at")
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-  },
+  goalContributionsSchema,
   (table) => {
     return {
       goal_idx: index("gc_goal_idx").on(table.goal_id),

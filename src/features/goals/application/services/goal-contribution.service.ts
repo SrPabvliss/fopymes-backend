@@ -9,7 +9,7 @@ import {
   GetByIdRoute,
   ListByGoalRoute,
   CreateRoute,
-    DeleteRoute,
+  DeleteRoute,
 } from "@/goals/infrastucture/controllers/goal-contribution.route";
 import { ITransactionRepository } from "@/transactions/domain/ports/transaction-repository.port";
 import { GoalContributionApiAdapter } from "@/goals/infrastucture/adapters/goal-contribution-api.adapter";
@@ -67,7 +67,9 @@ export class GoalContributionService implements IGoalContributionService {
 
   getById = createHandler<GetByIdRoute>(async (c) => {
     const id = c.req.param("id");
-    const contribution = await this.goalContributionRepository.findById(Number(id));
+    const contribution = await this.goalContributionRepository.findById(
+      Number(id)
+    );
 
     if (!contribution) {
       return c.json(
@@ -92,7 +94,7 @@ export class GoalContributionService implements IGoalContributionService {
 
   getByGoalId = createHandler<ListByGoalRoute>(async (c) => {
     const goalId = c.req.param("goalId");
-    
+
     const goal = await this.goalRepository.findById(Number(goalId));
     if (!goal) {
       return c.json(
@@ -105,7 +107,9 @@ export class GoalContributionService implements IGoalContributionService {
       );
     }
 
-    const contributions = await this.goalContributionRepository.findByGoalId(Number(goalId));
+    const contributions = await this.goalContributionRepository.findByGoalId(
+      Number(goalId)
+    );
     return c.json(
       {
         success: true,
@@ -117,112 +121,121 @@ export class GoalContributionService implements IGoalContributionService {
   });
 
   create = createHandler<CreateRoute>(async (c) => {
-  const data = c.req.valid("json");
-  
-  const goal = await this.goalRepository.findById(data.goal_id);
-  if (!goal) {
-    return c.json(
-      {
-        success: false,
-        data: null,
-        message: "Goal not found",
-      },
-      HttpStatusCodes.NOT_FOUND
-    );
-  }
+    const data = c.req.valid("json");
 
-  if (data.payment_method_id) {
-    const paymentMethodValid = await this.goalUtils.validatePaymentMethod(
-      data.payment_method_id,
-      data.user_id
-    );
-    
-    if (!paymentMethodValid) {
+    const goal = await this.goalRepository.findById(data.goal_id);
+    if (!goal) {
       return c.json(
         {
           success: false,
           data: null,
-          message: "Invalid payment method",
+          message: "Goal not found",
         },
-        HttpStatusCodes.BAD_REQUEST
+        HttpStatusCodes.NOT_FOUND
       );
     }
-  }
 
-  const contribution = await this.goalContributionRepository.create({
-    goalId: data.goal_id,
-    userId: data.user_id,
-    amount: data.amount,
-  });
+    if (data.payment_method_id) {
+      const paymentMethodValid = await this.goalUtils.validatePaymentMethod(
+        data.payment_method_id,
+        data.user_id
+      );
 
-  // Store the previous amount before updating the goal
-  const previousAmount = goal.currentAmount;
+      if (!paymentMethodValid) {
+        return c.json(
+          {
+            success: false,
+            data: null,
+            message: "Invalid payment method",
+          },
+          HttpStatusCodes.BAD_REQUEST
+        );
+      }
+    }
 
-  // Update the goal progress
-  const updatedGoal = await this.goalRepository.updateProgress(goal.id, data.amount);
+    const contribution = await this.goalContributionRepository.create({
+      goalId: data.goal_id,
+      userId: data.user_id,
+      amount: data.amount,
+    });
 
-  // Check and send progress milestone notifications
-  try {
-    await this.goalNotificationService.checkProgressMilestones(
-      updatedGoal,
-      previousAmount
+    // Store the previous amount before updating the goal
+    const previousAmount = goal.currentAmount;
+
+    // Update the goal progress
+    const updatedGoal = await this.goalRepository.updateProgress(
+      goal.id,
+      data.amount
     );
 
-    // Generar sugerencias actualizadas después de crear un aporte
-    await this.goalSuggestionService.suggestWeeklySaving(updatedGoal);
-    
-    // Verificar si la meta está en riesgo
-    await this.goalSuggestionService.checkGoalAtRisk(updatedGoal);
+    // Check and send progress milestone notifications
+    try {
+      await this.goalNotificationService.checkProgressMilestones(
+        updatedGoal,
+        previousAmount
+      );
 
-  } catch (error) {
-    console.error("Error sending goal progress notification or suggestions:", error);
-  }
+      // Generar sugerencias actualizadas después de crear un aporte
+      await this.goalSuggestionService.suggestWeeklySaving(updatedGoal);
 
-  const transaction = await this.transactionRepository.create({
-    userId: data.user_id,
-    amount: data.amount,
-    type: "INCOME",
-    description: data.description || `Contribution to goal: ${goal.name}`,
-    paymentMethodId: data.payment_method_id || null,
-    contributionId: contribution.id,
-    categoryId: goal.categoryId || null,
-    category: goal.category || null,
-    paymentMethod: data.payment_method_id ? await this.paymentMethodRepository.findById(data.payment_method_id) : null,
+      // Verificar si la meta está en riesgo
+      await this.goalSuggestionService.checkGoalAtRisk(updatedGoal);
+    } catch (error) {
+      console.error(
+        "Error sending goal progress notification or suggestions:",
+        error
+      );
+    }
+
+    const transaction = await this.transactionRepository.create({
+      userId: data.user_id,
+      amount: data.amount,
+      type: "INCOME",
+      description: data.description || `Contribution to goal: ${goal.name}`,
+      paymentMethodId: data.payment_method_id || null,
+      contributionId: contribution.id,
+      categoryId: goal.categoryId || null,
+      category: goal.category || null,
+      paymentMethod: data.payment_method_id
+        ? await this.paymentMethodRepository.findById(data.payment_method_id)
+        : null,
+    });
+
+    return c.json(
+      {
+        success: true,
+        data: GoalContributionApiAdapter.toApiResponse(contribution),
+        message: "Goal contribution created successfully",
+      },
+      HttpStatusCodes.CREATED
+    );
   });
 
-  return c.json(
-    {
-      success: true,
-      data: GoalContributionApiAdapter.toApiResponse(contribution),
-      message: "Goal contribution created successfully",
-    },
-    HttpStatusCodes.CREATED
-  );
-});
+  delete = createHandler<DeleteRoute>(async (c) => {
+    const id = c.req.param("id");
+    const contribution = await this.goalContributionRepository.findById(
+      Number(id)
+    );
 
-delete = createHandler<DeleteRoute>(async (c) => {
-	const id = c.req.param("id");
-	const contribution = await this.goalContributionRepository.findById(Number(id));
+    if (!contribution) {
+      return c.json(
+        {
+          success: false,
+          data: null,
+          message: "Goal contribution not found",
+        },
+        HttpStatusCodes.NOT_FOUND
+      );
+    }
 
-	if (!contribution) {
-		return c.json(
-			{
-				success: false,
-				data: null,
-				message: "Goal contribution not found",
-			},
-			HttpStatusCodes.NOT_FOUND
-		);
-	}
-
-	const deleted = await this.goalContributionRepository.delete(Number(id));
-	return c.json(
-		{
-			success: true,
-			data: { deleted },
-			message: "Goal contribution deleted successfully",
-		},
-		HttpStatusCodes.OK
-	);
-});
+    const deleted = await this.goalContributionRepository.delete(Number(id));
+    return c.json(
+      {
+        success: true,
+        data: { deleted },
+        message: "Goal contribution deleted successfully",
+      },
+      HttpStatusCodes.OK
+    );
+  });
 }

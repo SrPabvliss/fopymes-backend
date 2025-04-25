@@ -85,9 +85,9 @@ export const recalculateContributionAmountCron = new CronJob(
           );
 
           // Adjust for contribution frequency (e.g., 7 for weekly, 30 for monthly)
-          const contributionFrequency = goal.contributionFrequency;
+          const contributionFrequency = goal.contributionFrequency || 7; // Default to weekly if not set
           const contributionsRemaining = Math.ceil(
-            daysRemaining / contributionFrequency
+            daysRemaining / contributionFrequency 
           );
 
           if (contributionsRemaining <= 0) {

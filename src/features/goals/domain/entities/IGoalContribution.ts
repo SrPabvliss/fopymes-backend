@@ -4,5 +4,6 @@ export interface IGoalContribution {
   userId: number;
   amount: number;
   date: Date;
-  transactionId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

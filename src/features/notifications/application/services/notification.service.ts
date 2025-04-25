@@ -14,7 +14,7 @@ import {
   ListRoute,
   MarkAsReadRoute,
   MarkAllAsReadRoute,
-  UpdateRoute
+  UpdateRoute,
 } from "../../infrastructure/controllers/notification.routes";
 import { PgUserRepository } from "@/users/infrastructure/adapters/user.repository";
 
@@ -25,19 +25,21 @@ export class NotificationService implements INotificationService {
   private notificationUtils: NotificationUtilsService;
 
   constructor(
-    private readonly notificationRepository: INotificationRepository,
+    private readonly notificationRepository: INotificationRepository
   ) {
     this.userRepository = PgUserRepository.getInstance();
     this.notificationEmailService = NotificationEmailService.getInstance();
-    this.notificationUtils = NotificationUtilsService.getInstance(notificationRepository);
+    this.notificationUtils = NotificationUtilsService.getInstance(
+      notificationRepository
+    );
   }
 
   public static getInstance(
-    notificationRepository: INotificationRepository,
+    notificationRepository: INotificationRepository
   ): NotificationService {
     if (!NotificationService.instance) {
       NotificationService.instance = new NotificationService(
-        notificationRepository,
+        notificationRepository
       );
     }
     return NotificationService.instance;
@@ -95,7 +97,9 @@ export class NotificationService implements INotificationService {
       );
     }
 
-    const notifications = await this.notificationRepository.findByUserId(Number(userId));
+    const notifications = await this.notificationRepository.findByUserId(
+      Number(userId)
+    );
     return c.json(
       {
         success: true,
@@ -121,7 +125,9 @@ export class NotificationService implements INotificationService {
       );
     }
 
-    const notifications = await this.notificationRepository.findUnreadByUserId(Number(userId));
+    const notifications = await this.notificationRepository.findUnreadByUserId(
+      Number(userId)
+    );
     return c.json(
       {
         success: true,
@@ -156,6 +162,7 @@ export class NotificationService implements INotificationService {
       read: false,
       type: data.type,
       expiresAt: data.expires_at || null,
+      updatedAt: new Date(),
     });
 
     // Send email notification if requested
@@ -163,7 +170,7 @@ export class NotificationService implements INotificationService {
       try {
         await this.notificationEmailService.sendNotificationEmail(notification);
       } catch (error) {
-        console.error('Error sending notification email:', error);
+        console.error("Error sending notification email:", error);
         // Continue even if email fails
       }
     }
@@ -259,7 +266,9 @@ export class NotificationService implements INotificationService {
       );
     }
 
-    const updatedNotification = await this.notificationRepository.markAsRead(Number(id));
+    const updatedNotification = await this.notificationRepository.markAsRead(
+      Number(id)
+    );
     return c.json(
       {
         success: true,
@@ -272,7 +281,7 @@ export class NotificationService implements INotificationService {
 
   markAllAsRead = createHandler<MarkAllAsReadRoute>(async (c) => {
     const userId = c.req.param("userId");
-    
+
     const user = await this.userRepository.findById(Number(userId));
     if (!user) {
       return c.json(
@@ -285,7 +294,9 @@ export class NotificationService implements INotificationService {
       );
     }
 
-    const marked = await this.notificationRepository.markAllAsRead(Number(userId));
+    const marked = await this.notificationRepository.markAllAsRead(
+      Number(userId)
+    );
     return c.json(
       {
         success: true,

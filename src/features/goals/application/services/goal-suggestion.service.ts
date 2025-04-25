@@ -134,12 +134,12 @@ export class GoalSuggestionService {
     // Ordenar contribuciones por fecha, de más reciente a más antigua
     contributions.sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
     );
 
     const lastContribution = contributions[0];
     const daysSinceLastContribution = Math.ceil(
-      (new Date().getTime() - new Date(lastContribution.createdAt).getTime()) /
+      (new Date().getTime() - new Date(lastContribution.createdAt!).getTime()) /
         (1000 * 3600 * 24)
     );
 
@@ -177,14 +177,14 @@ export class GoalSuggestionService {
     // Calcular la frecuencia promedio entre aportes (en días)
     contributions.sort(
       (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime()
     );
 
     let totalDaysBetween = 0;
     for (let i = 1; i < contributions.length; i++) {
       const daysBetween = Math.ceil(
-        (new Date(contributions[i].createdAt).getTime() -
-          new Date(contributions[i - 1].createdAt).getTime()) /
+        (new Date(contributions[i].createdAt!).getTime() -
+          new Date(contributions[i - 1].createdAt!).getTime()) /
           (1000 * 3600 * 24)
       );
       totalDaysBetween += daysBetween;
