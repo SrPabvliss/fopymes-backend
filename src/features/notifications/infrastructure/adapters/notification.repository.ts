@@ -137,6 +137,31 @@ export class PgNotificationRepository implements INotificationRepository {
 
     return result.length;
   }
+  
+  async findByUserIdAndType(
+    userId: number,
+    type: NotificationType,
+    afterDate?: Date
+  ): Promise<INotification[]> {
+    let conditions = and(
+      eq(notifications.user_id, userId),
+      eq(notifications.type, type)
+    );
+    
+    if (afterDate) {
+      conditions = and(
+        conditions,
+        lt(notifications.created_at, afterDate)
+      );
+    }
+    
+    const result = await this.db
+      .select()
+      .from(notifications)
+      .where(conditions);
+
+    return result.map(this.mapToEntity);
+  }
 
   private mapToEntity(raw: any): INotification {
     return {

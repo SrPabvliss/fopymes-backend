@@ -36,8 +36,8 @@ export class TransactionApiAdapter {
 				transaction.contributionId ? "GOAL" : 
 				transaction.budgetId ? "BUDGET" : 
 				"OTHER",
-			created_at: transaction.createdAt,
-			updated_at: transaction.updatedAt,
+			created_at: transaction.createdAt ?? new Date(),
+			updated_at: transaction.updatedAt ?? new Date(),
 		};
 	}
 

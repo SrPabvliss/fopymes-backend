@@ -36,7 +36,7 @@ export class NotificationEmailService {
       // Generate email content using the template
       const emailContent = baseTemplate(
         notification.title,
-        notification.subtitle,
+        notification.subtitle || null,
         notification.message,
         notification.type
       );

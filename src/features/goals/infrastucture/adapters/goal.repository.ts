@@ -76,6 +76,21 @@ export class PgGoalRepository implements IGoalRepository {
     return result.map((row) => this.mapToEntity(row.goal, row.category));
   }
 
+  async findAllActive(): Promise<IGoal[]> {
+    const result = await this.db
+      .select({
+        goal: goals,
+        category: categories,
+      })
+      .from(goals)
+      .leftJoin(categories, eq(goals.category_id, categories.id))
+      .where(
+        sql`${goals.current_amount} < ${goals.target_amount}`
+      );
+
+    return result.map((row) => this.mapToEntity(row.goal, row.category));
+  }
+
   async findSharedWithUser(userId: number): Promise<IGoal[]> {
     const result = await this.db
       .select({

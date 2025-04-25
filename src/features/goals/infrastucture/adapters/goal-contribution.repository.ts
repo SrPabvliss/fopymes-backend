@@ -125,7 +125,8 @@ export class PgGoalContributionRepository
       userId: raw.user_id,
       amount: Number(raw.amount),
       date: raw.date,
-      transactionId: raw.transaction_id,
+      createdAt: raw.created_at,
+      updatedAt: raw.updated_at,
     };
   }
 }

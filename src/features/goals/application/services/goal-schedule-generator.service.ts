@@ -40,8 +40,9 @@ export class GoalScheduleGeneratorService {
     }
 
     const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const contributionFrequency = goal.contributionFrequency ? goal.contributionFrequency : 1;
     
-    const possibleContributions = Math.floor(daysRemaining / goal.contributionFrequency);
+    const possibleContributions = Math.floor(daysRemaining / contributionFrequency );
     
     if (possibleContributions <= 0) {
       return [];
@@ -49,7 +50,7 @@ export class GoalScheduleGeneratorService {
 
     let contributionAmount: number;
     
-    if (goal.contributionAmount > 0) {
+    if (goal.contributionAmount != null  && goal.contributionAmount > 0) {
       contributionAmount = goal.contributionAmount;
     } else {
       contributionAmount = Math.ceil(remaining / possibleContributions);
@@ -60,7 +61,7 @@ export class GoalScheduleGeneratorService {
     
     for (let i = 0; i < possibleContributions; i++) {
       currentDate = new Date(currentDate);
-      currentDate.setDate(currentDate.getDate() + goal.contributionFrequency);
+      currentDate.setDate(currentDate.getDate() + contributionFrequency);
       
       if (currentDate <= endDate) {
         scheduledDates.push(new Date(currentDate));
