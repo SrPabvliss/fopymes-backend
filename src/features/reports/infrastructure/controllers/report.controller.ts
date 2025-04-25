@@ -56,22 +56,25 @@ const generateReportSchema = z.object({
 const generateReportHandler = createHandler(async (c: Context<AppBindings>) => {
   try {
     const { type, format, filters } = await c.req.json();
+
     const report = await reportService.generateReport(type, format, filters);
     return c.json(
       {
         success: true,
         data: {
-          id: report.id,
+          id: report.id?.toString() || "",
           type: report.type,
           format: report.format,
-          createdAt: report.createdAt.toISOString(),
-          expiresAt: report.expiresAt.toISOString(),
+          createdAt: report.createdAt?.toISOString(),
+          expiresAt: report.expiresAt?.toISOString(),
         },
         message: "Report generated successfully",
       },
       HttpStatusCodes.OK
     );
   } catch (error) {
+    console.error(error);
+
     return c.json(
       {
         success: false,
@@ -104,8 +107,8 @@ const getReportHandler = createHandler(async (c: Context<AppBindings>) => {
           type: report.type,
           format: report.format,
           data: report.data,
-          createdAt: report.createdAt.toISOString(),
-          expiresAt: report.expiresAt.toISOString(),
+          createdAt: report.createdAt?.toISOString(),
+          expiresAt: report.expiresAt?.toISOString(),
         },
         message: "Report retrieved successfully",
       },
@@ -225,6 +228,9 @@ const router = createRouter()
               },
             },
           },
+        },
+        400: {
+          description: "Report not found",
         },
       },
     },

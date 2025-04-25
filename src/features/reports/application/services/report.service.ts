@@ -108,7 +108,10 @@ export class ReportServiceImpl implements ReportService {
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       data,
+      userId: filters.userId ? parseInt(filters.userId) : 0,
     };
+
+    console.log(report, "lenin report");
 
     return this.reportRepository.save(report);
   }
@@ -132,8 +135,24 @@ export class ReportServiceImpl implements ReportService {
   private async generateGoalsByStatusReport(
     filters: ReportFilters
   ): Promise<GoalStatusReport> {
+    if (!filters.userId) {
+      throw new Error("User ID is required for goals by status report");
+    }
+
     const goals = await this.goalRepository.findByFilters(filters);
     const now = new Date();
+
+    if (goals.length === 0) {
+      console.log("No goals found");
+
+      return {
+        completed: 0,
+        expired: 0,
+        inProgress: 0,
+        total: 0,
+        goals: [],
+      };
+    }
 
     const report: GoalStatusReport = {
       completed: 0,
@@ -147,7 +166,7 @@ export class ReportServiceImpl implements ReportService {
         else report.inProgress++;
 
         return {
-          id: goal.id.toString(),
+          id: goal.id?.toString() || "",
           name: goal.name,
           status,
           targetAmount: goal.targetAmount,
@@ -182,14 +201,14 @@ export class ReportServiceImpl implements ReportService {
         );
 
         return {
-          id: category.id.toString(),
+          id: category.id?.toString() || "",
           name: category.name,
           totalGoals: categoryGoals.length,
           totalAmount,
           completedAmount,
           progress: (completedAmount / totalAmount) * 100,
           goals: categoryGoals.map((goal: IGoal) => ({
-            id: goal.id.toString(),
+            id: goal.id?.toString() || "",
             name: goal.name,
             targetAmount: goal.targetAmount,
             currentAmount: goal.currentAmount,
@@ -219,13 +238,13 @@ export class ReportServiceImpl implements ReportService {
     );
 
     const report: ContributionReport = {
-      goalId: goal.id.toString(),
+      goalId: goal.id?.toString() || "",
       goalName: goal.name,
       contributions: contributions.map((contribution: IGoalContribution) => ({
-        id: contribution.id.toString(),
+        id: contribution.id?.toString() || "",
         amount: contribution.amount,
         date: contribution.date,
-        transactionId: "123",
+        transactionId: contribution.transactionId,
       })),
       totalContributions: contributions.reduce(
         (sum: number, c: IGoalContribution) => sum + c.amount,
@@ -267,7 +286,7 @@ export class ReportServiceImpl implements ReportService {
     const actualSavings = this.calculateActualSavings(contributions, filters);
 
     const report: SavingsComparisonReport = {
-      goalId: goal.id.toString(),
+      goalId: goal.id?.toString() || "",
       goalName: goal.name,
       plannedSavings,
       actualSavings,
@@ -345,7 +364,7 @@ export class ReportServiceImpl implements ReportService {
         );
 
         return {
-          categoryId: category.id.toString(),
+          categoryId: category.id?.toString() || "",
           categoryName: category.name,
           totalGoals: categoryGoals.length,
           totalAmount,

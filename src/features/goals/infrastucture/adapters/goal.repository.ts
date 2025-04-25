@@ -197,11 +197,11 @@ export class PgGoalRepository implements IGoalRepository {
     }
 
     if (filters.startDate) {
-      conditions.push(gte(goals.end_date, filters.startDate));
+      conditions.push(gte(goals.end_date, new Date(filters.startDate)));
     }
 
     if (filters.endDate) {
-      conditions.push(lte(goals.end_date, filters.endDate));
+      conditions.push(lte(goals.end_date, new Date(filters.endDate)));
     }
 
     if (filters.includeShared) {

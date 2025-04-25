@@ -1,15 +1,17 @@
+import { eq, lt } from "drizzle-orm";
+import DatabaseConnection from "../../../../core/infrastructure/database";
 import {
   Report,
   ReportFormat,
   ReportType,
 } from "../../domain/entities/report.entity";
 import { ReportRepository } from "../../domain/repositories/report.repository";
-import { DatabaseConnection } from "@/db";
-import { v4 as uuidv4 } from "uuid";
+import { reports } from "../../../../core/infrastructure/database/schema";
 
 export class PgReportRepository implements ReportRepository {
   private static instance: PgReportRepository;
-  private db = DatabaseConnection.getInstance();
+
+  private db = DatabaseConnection.getInstance().db;
 
   private constructor() {}
 
@@ -21,54 +23,51 @@ export class PgReportRepository implements ReportRepository {
   }
 
   async save(report: Report): Promise<Report> {
-    const query = `
-      INSERT INTO reports (id, type, format, filters, data, created_at, expires_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *
-    `;
+    const result = await this.db
+      .insert(reports)
+      .values({
+        user_id: report.userId,
+        type: report.type,
+        format: report.format,
+        data: report.data,
+        expires_at: report.expiresAt,
+      })
+      .returning();
 
-    const values = [
-      report.id || uuidv4(),
-      report.type,
-      report.format,
-      JSON.stringify(report.filters),
-      JSON.stringify(report.data),
-      report.createdAt,
-      report.expiresAt,
-    ];
-
-    const result = await this.db.getPool().query(query, values);
-    return this.mapToReport(result.rows[0]);
+    return this.mapToReport(result[0]);
   }
 
   async findById(id: string): Promise<Report | null> {
-    const query = "SELECT * FROM reports WHERE id = $1";
-    const result = await this.db.getPool().query(query, [id]);
+    const result = await this.db
+      .select()
+      .from(reports)
+      .where(eq(reports.id, parseInt(id)));
 
-    if (result.rows.length === 0) {
+    if (!result || result.length === 0) {
       return null;
     }
 
-    return this.mapToReport(result.rows[0]);
+    return this.mapToReport(result[0]);
   }
 
   async delete(id: string): Promise<void> {
-    const query = "DELETE FROM reports WHERE id = $1";
-    await this.db.getPool().query(query, [id]);
+    await this.db.delete(reports).where(eq(reports.id, parseInt(id)));
   }
 
   async deleteExpired(): Promise<void> {
-    const query = "DELETE FROM reports WHERE expires_at < NOW()";
-    await this.db.getPool().query(query);
+    await this.db.delete(reports).where(lt(reports.expires_at, new Date()));
   }
 
   private mapToReport(row: any): Report {
+    console.log(row.filters, row.data, "lenin row");
+
     return {
       id: row.id,
+      userId: row.user_id,
       type: row.type as ReportType,
       format: row.format as ReportFormat,
-      filters: JSON.parse(row.filters),
-      data: JSON.parse(row.data),
+      filters: row.filters ?? {},
+      data: row.data ?? {},
       createdAt: row.created_at,
       expiresAt: row.expires_at,
     };

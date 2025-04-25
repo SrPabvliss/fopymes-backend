@@ -1,5 +1,6 @@
 export interface Report {
   id: string;
+  userId: number;
   type: ReportType;
   format: ReportFormat;
   filters: ReportFilters;
