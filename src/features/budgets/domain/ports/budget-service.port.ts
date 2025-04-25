@@ -2,6 +2,7 @@ import {
 	CreateRoute,
 	DeleteRoute,
 	GetByIdRoute,
+	GetTransactionsRoute,
 	ListByMonthRoute,
 	ListByUserRoute,
 	ListRoute,
@@ -21,4 +22,5 @@ export interface IBudgetService {
 	update: AppRouteHandler<UpdateRoute>;
 	delete: AppRouteHandler<DeleteRoute>;
 	updateAmount: AppRouteHandler<UpdateAmountRoute>;
+	getTransactions: AppRouteHandler<GetTransactionsRoute>;
 }

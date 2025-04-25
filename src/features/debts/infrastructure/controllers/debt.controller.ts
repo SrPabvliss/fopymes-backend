@@ -30,6 +30,7 @@ const router = createRouter()
 	.openapi(routes.create, debtService.create)
 	.openapi(routes.update, debtService.update)
 	.openapi(routes.delete_, debtService.delete)
-	.openapi(routes.payDebt, debtService.payDebt);
+	.openapi(routes.payDebt, debtService.payDebt)
+	.openapi(routes.getTransactions, debtService.getTransactions);
 
 export default router;

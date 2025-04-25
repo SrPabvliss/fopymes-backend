@@ -4,14 +4,15 @@ import { PgUserRepository } from "@/users/infrastructure/adapters/user.repositor
 import { BudgetUtilsService } from "@/budgets/application/services/budget-utils.service";
 import { BudgetService } from "@/budgets/application/services/budget.service";
 import { PgBudgetRepository } from "../adapters/budget.repository";
-
+import { PgTransactionRepository } from "@/transactions/infrastructure/adapters/transaction.repository";
 const userRepository = PgUserRepository.getInstance();
 const budgetRepository = PgBudgetRepository.getInstance();
 const budgetUtils = BudgetUtilsService.getInstance(
 	budgetRepository,
 	userRepository
 );
-const budgetService = BudgetService.getInstance(budgetRepository, budgetUtils);
+const transactionRepository = PgTransactionRepository.getInstance();
+const budgetService = BudgetService.getInstance(budgetRepository, budgetUtils, transactionRepository);
 
 const router = createRouter()
 	.openapi(routes.list, budgetService.getAll)
@@ -22,6 +23,8 @@ const router = createRouter()
 	.openapi(routes.listByUser, budgetService.getByUserId)
 	.openapi(routes.listByMonth, budgetService.getByUserIdAndMonth)
 	.openapi(routes.listShared, budgetService.getSharedWithUser)
-	.openapi(routes.updateAmount, budgetService.updateAmount);
+	.openapi(routes.updateAmount, budgetService.updateAmount)
+	.openapi(routes.createBudgetTransaction, budgetService.createTransaction)
+	.openapi(routes.getTransactions, budgetService.getTransactions);
 
 export default router;

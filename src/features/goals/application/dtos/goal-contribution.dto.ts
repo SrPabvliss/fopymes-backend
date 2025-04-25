@@ -8,11 +8,12 @@ export const selectGoalContributionSchema = createSelectSchema(goal_contribution
 export const createGoalContributionSchema = goalContributionBaseSchema
   .extend({
     amount: z.number().positive("Amount must be positive"),
+    payment_method_id: z.number().optional(),
+    description: z.string().optional(),
   })
   .omit({
     id: true,
     date: true,
   });
-
 export type GoalContributionResponse = z.infer<typeof selectGoalContributionSchema>;
 export type CreateGoalContributionDTO = z.infer<typeof createGoalContributionSchema>;
