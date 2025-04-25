@@ -15,6 +15,8 @@ import { Data } from "hono/dist/types/context";
 import { ExcelService } from "../services/excel.service";
 import { CSVService } from "../services/csv.service";
 import { CleanupReportsCron } from "../cron/cleanup-reports.cron";
+import * as routes from "./report.routes";
+import { PDFService } from "../services/pdf.service";
 
 const reportRepository = PgReportRepository.getInstance();
 const goalRepository = PgGoalRepository.getInstance();
@@ -23,6 +25,7 @@ const budgetRepository = PgBudgetRepository.getInstance();
 const transactionRepository = PgTransactionRepository.getInstance();
 const excelService = new ExcelService();
 const csvService = new CSVService();
+const pdfService = new PDFService();
 
 const reportService = ReportServiceImpl.getInstance(
   reportRepository,
@@ -46,12 +49,6 @@ const reportFiltersSchema = z
     startDate: data.startDate ? new Date(data.startDate) : undefined,
     endDate: data.endDate ? new Date(data.endDate) : undefined,
   }));
-
-const generateReportSchema = z.object({
-  type: z.nativeEnum(ReportType),
-  format: z.nativeEnum(ReportFormat),
-  filters: reportFiltersSchema,
-});
 
 const generateReportHandler = createHandler(async (c: Context<AppBindings>) => {
   try {
@@ -93,9 +90,14 @@ const getReportHandler = createHandler(async (c: Context<AppBindings>) => {
     const report = await reportService.getReport(id);
 
     if (report.format === ReportFormat.PDF) {
-      return c.body(report.data as Data, 200, {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="report-${id}.pdf"`,
+      const pdfBuffer = await pdfService.generatePDF(report);
+
+      return new Response(pdfBuffer, {
+        status: HttpStatusCodes.OK,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="report-${id}.pdf"`,
+        },
       });
     }
 
@@ -146,113 +148,9 @@ const deleteReportHandler = createHandler(async (c: Context<AppBindings>) => {
 });
 
 const router = createRouter()
-  .openapi(
-    {
-      path: "/reports",
-      method: "post",
-      request: {
-        body: {
-          content: {
-            "application/json": {
-              schema: generateReportSchema,
-            },
-          },
-        },
-      },
-      responses: {
-        200: {
-          description: "Report generated successfully",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  success: { type: "boolean" },
-                  data: {
-                    type: "object",
-                    properties: {
-                      id: { type: "string" },
-                      type: { type: "string" },
-                      format: { type: "string" },
-                      createdAt: { type: "string" },
-                      expiresAt: { type: "string" },
-                    },
-                  },
-                  message: { type: "string" },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    generateReportHandler
-  )
-  .openapi(
-    {
-      path: "/reports/{id}",
-      method: "get",
-      request: {
-        params: z.object({
-          id: z.string(),
-        }),
-      },
-      responses: {
-        200: {
-          description: "Report retrieved successfully",
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  success: { type: "boolean" },
-                  data: {
-                    type: "object",
-                    properties: {
-                      id: { type: "string" },
-                      type: { type: "string" },
-                      format: { type: "string" },
-                      data: { type: "object" },
-                      createdAt: { type: "string" },
-                      expiresAt: { type: "string" },
-                    },
-                  },
-                  message: { type: "string" },
-                },
-              },
-            },
-            "application/pdf": {
-              schema: {
-                type: "string",
-                format: "binary",
-              },
-            },
-          },
-        },
-        400: {
-          description: "Report not found",
-        },
-      },
-    },
-    getReportHandler
-  )
-  .openapi(
-    {
-      path: "/reports/{id}",
-      method: "delete",
-      request: {
-        params: z.object({
-          id: z.string(),
-        }),
-      },
-      responses: {
-        204: {
-          description: "Report deleted successfully",
-        },
-      },
-    },
-    deleteReportHandler
-  );
+  .openapi(routes.generate, generateReportHandler)
+  .openapi(routes.get, getReportHandler)
+  .openapi(routes.delete_, deleteReportHandler);
 
 export default router;
 

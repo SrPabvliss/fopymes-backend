@@ -59,8 +59,6 @@ export class PgReportRepository implements ReportRepository {
   }
 
   private mapToReport(row: any): Report {
-    console.log(row.filters, row.data, "lenin row");
-
     return {
       id: row.id,
       userId: row.user_id,

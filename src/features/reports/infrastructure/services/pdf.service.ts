@@ -1,46 +1,51 @@
 import { Report, ReportType } from "../../domain/entities/report.entity";
-import { PDFDocument } from "pdfkit";
+import PDFDocument from "pdfkit";
+import fs from "fs";
 
 export class PDFService {
   async generatePDF(report: Report): Promise<Buffer> {
     const doc = new PDFDocument();
     const chunks: Uint8Array[] = [];
 
-    doc.on("data", (chunk: Uint8Array) => chunks.push(chunk));
+    return new Promise((resolve, reject) => {
+      doc.on("data", (chunk: Uint8Array) => chunks.push(chunk));
+      doc.on("end", () => {
+        const buffer = Buffer.concat(chunks);
+        resolve(buffer);
+      });
+      doc.on("error", reject);
 
-    // Add title
-    doc.fontSize(20).text("Report", { align: "center" });
-    doc.moveDown();
+      doc.fontSize(20).text("Report", { align: "center" });
+      doc.moveDown();
 
-    switch (report.type) {
-      case ReportType.GOALS_BY_STATUS:
-        await this.formatGoalsByStatus(doc, report.data);
-        break;
-      case ReportType.GOALS_BY_CATEGORY:
-        await this.formatGoalsByCategory(doc, report.data);
-        break;
-      case ReportType.CONTRIBUTIONS_BY_GOAL:
-        await this.formatContributionsByGoal(doc, report.data);
-        break;
-      case ReportType.SAVINGS_COMPARISON:
-        await this.formatSavingsComparison(doc, report.data);
-        break;
-      case ReportType.SAVINGS_SUMMARY:
-        await this.formatSavingsSummary(doc, report.data);
-        break;
-      default:
-        throw new Error(
-          `Unsupported report type for PDF export: ${report.type}`
-        );
-    }
+      switch (report.type) {
+        case ReportType.GOALS_BY_STATUS:
+          this.formatGoalsByStatus(doc, report.data);
+          break;
+        case ReportType.GOALS_BY_CATEGORY:
+          this.formatGoalsByCategory(doc, report.data);
+          break;
+        case ReportType.CONTRIBUTIONS_BY_GOAL:
+          this.formatContributionsByGoal(doc, report.data);
+          break;
+        case ReportType.SAVINGS_COMPARISON:
+          this.formatSavingsComparison(doc, report.data);
+          break;
+        case ReportType.SAVINGS_SUMMARY:
+          this.formatSavingsSummary(doc, report.data);
+          break;
+        default:
+          reject(
+            new Error(`Unsupported report type for PDF export: ${report.type}`)
+          );
+          return;
+      }
 
-    doc.end();
-
-    return Buffer.concat(chunks as unknown as Uint8Array[]);
+      doc.end();
+    });
   }
 
-  private async formatGoalsByStatus(doc: PDFDocument, data: any) {
-    // Add goal data
+  private formatGoalsByStatus(doc: typeof PDFDocument, data: any) {
     doc.fontSize(16).text("Goals by Status");
     doc.moveDown();
 
@@ -54,7 +59,6 @@ export class PDFService {
       doc.moveDown();
     });
 
-    // Add summary
     doc.fontSize(14).text("Summary");
     doc.fontSize(10).text(`Total Goals: ${data.total}`);
     doc.text(`Completed Goals: ${data.completed}`);
@@ -62,7 +66,7 @@ export class PDFService {
     doc.text(`In Progress Goals: ${data.inProgress}`);
   }
 
-  private async formatGoalsByCategory(doc: PDFDocument, data: any) {
+  private formatGoalsByCategory(doc: typeof PDFDocument, data: any) {
     doc.fontSize(16).text("Goals by Category");
     doc.moveDown();
 
@@ -85,7 +89,7 @@ export class PDFService {
     });
   }
 
-  private async formatContributionsByGoal(doc: PDFDocument, data: any) {
+  private formatContributionsByGoal(doc: typeof PDFDocument, data: any) {
     doc.fontSize(16).text("Contributions by Goal");
     doc.moveDown();
 
@@ -106,7 +110,7 @@ export class PDFService {
     doc.text(`Last Contribution: ${data.lastContributionDate}`);
   }
 
-  private async formatSavingsComparison(doc: PDFDocument, data: any) {
+  private formatSavingsComparison(doc: typeof PDFDocument, data: any) {
     doc.fontSize(16).text("Savings Comparison");
     doc.moveDown();
 
@@ -123,7 +127,7 @@ export class PDFService {
     });
   }
 
-  private async formatSavingsSummary(doc: PDFDocument, data: any) {
+  private formatSavingsSummary(doc: typeof PDFDocument, data: any) {
     doc.fontSize(16).text("Savings Summary");
     doc.moveDown();
 
