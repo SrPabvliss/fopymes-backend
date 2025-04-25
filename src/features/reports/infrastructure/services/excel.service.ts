@@ -41,7 +41,7 @@ export class ExcelService {
       "Deadline",
     ]);
 
-    data.goals.forEach((goal: any) => {
+    data.goals?.forEach((goal: any) => {
       worksheet.addRow([
         goal.name,
         goal.status,
