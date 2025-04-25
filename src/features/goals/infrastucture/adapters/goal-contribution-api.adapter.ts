@@ -12,8 +12,8 @@ export class GoalContributionApiAdapter {
       user_id: contribution.userId,
       amount: contribution.amount.toString(),
       date: contribution.date,
-      updated_at: contribution.updatedAt,
-      created_at: contribution.createdAt,
+      updated_at: contribution.updatedAt || new Date(),
+      created_at: contribution.createdAt || new Date(),
     };
   }
 
