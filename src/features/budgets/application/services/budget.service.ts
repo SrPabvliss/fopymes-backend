@@ -205,6 +205,15 @@ export class BudgetService implements IBudgetService {
 			month: new Date(data.month),
 		});
 
+		// Send notification if budget is shared
+		try {
+			if (budget.sharedUserId) {
+				await this.budgetNotificationService.notifyBudgetShared(budget, budget.sharedUserId);
+			}
+		} catch (error) {
+			console.error('Error sending budget notification:', error);
+		}
+
 		return c.json(
 			{
 				success: true,
@@ -268,6 +277,26 @@ export class BudgetService implements IBudgetService {
 			updateData
 		);
 
+		// Send notifications for relevant updates
+		try {
+			// Notify if the budget is now shared with someone new
+			if (data.shared_user_id !== undefined && 
+				data.shared_user_id !== null && 
+				budget.sharedUserId !== data.shared_user_id) {
+				await this.budgetNotificationService.notifyBudgetShared(updatedBudget, data.shared_user_id);
+			}
+
+			// Check budget limits if amount changed
+			if (data.current_amount !== undefined && budget.currentAmount !== Number(data.current_amount)) {
+				await this.budgetNotificationService.checkBudgetLimits(
+					updatedBudget, 
+					budget.currentAmount
+				);
+			}
+		} catch (error) {
+			console.error('Error sending budget update notification:', error);
+		}
+
 		return c.json(
 			{
 				success: true,
@@ -326,10 +355,24 @@ export class BudgetService implements IBudgetService {
 			);
 		}
 
+		// Get the budget before update to have the previous amount
+		const budget = await this.budgetRepository.findById(Number(id));
+		const previousAmount = budget ? budget.currentAmount : 0;
+
 		const updatedBudget = await this.budgetRepository.updateAmount(
 			Number(id),
 			amount
 		);
+
+		// Check and send budget limit notifications
+		try {
+			await this.budgetNotificationService.checkBudgetLimits(
+				updatedBudget,
+				previousAmount
+			);
+		} catch (error) {
+			console.error('Error sending budget limits notification:', error);
+		}
 
 		return c.json(
 			{

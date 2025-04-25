@@ -123,6 +123,20 @@ export class PgTransactionRepository implements ITransactionRepository {
 		return result.map(this.mapToEntity);
 	}
 
+	async findByUserIdAndDateRange(userId: number, startDate: Date, endDate: Date): Promise<ITransaction[]> {
+		const result = await this.db
+			.select()
+			.from(transactions)
+			.where(
+				and(
+					eq(transactions.user_id, userId),
+					gte(transactions.date, startDate),
+					lte(transactions.date, endDate)
+				)
+			);
+		return result.map(this.mapToEntity);
+	}
+
 	async findByFilters(
 		userId: number,
 		filters: TransactionFilters
