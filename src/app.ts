@@ -24,7 +24,7 @@ import { createMiddleware } from "hono/factory";
 
 const app = createApp();
 
-startScheduledTransactionsJob();
+// startScheduledTransactionsJob();
 startNotificationsCleanupJob();
 configureOpenAPI(app);
 

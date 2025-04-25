@@ -2,11 +2,12 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import env from "@/env";
 import * as schema from "./schema";
+import { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 export class DatabaseConnection {
   private static instance: DatabaseConnection;
   private pool: Pool;
-  private drizzleInstance: ReturnType<typeof drizzle>;
+  private drizzleInstance: NodePgDatabase<typeof schema>;
   private isClosing: boolean = false;
 
   private constructor() {
@@ -59,7 +60,7 @@ export class DatabaseConnection {
     return DatabaseConnection.instance;
   }
 
-  public get db() {
+  public get db(): NodePgDatabase<typeof schema> {
     return this.drizzleInstance;
   }
 
