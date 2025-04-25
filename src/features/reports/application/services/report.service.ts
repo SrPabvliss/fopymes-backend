@@ -111,8 +111,6 @@ export class ReportServiceImpl implements ReportService {
       userId: filters.userId ? parseInt(filters.userId) : 0,
     };
 
-    console.log(report, "lenin report");
-
     return this.reportRepository.save(report);
   }
 
