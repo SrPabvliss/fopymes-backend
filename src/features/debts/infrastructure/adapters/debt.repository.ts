@@ -115,6 +115,31 @@ export class PgDebtRepository implements IDebtRepository {
 		return result.map(this.mapToEntity);
 	}
 
+	async findByStatus(paid: boolean): Promise<IDebt[]> {
+		const result = await this.db
+			.select({
+				id: debts.id,
+				user_id: debts.user_id,
+				description: debts.description,
+				original_amount: debts.original_amount,
+				pending_amount: debts.pending_amount,
+				due_date: debts.due_date,
+				paid: debts.paid,
+				creditor_id: debts.creditor_id,
+				category_id: debts.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+			})
+			.from(debts)
+			.leftJoin(categories, eq(debts.category_id, categories.id))
+			.where(eq(debts.paid, paid));
+
+		return result.map(this.mapToEntity);
+	}
+
 	async create(debtData: Omit<IDebt, "id">): Promise<IDebt> {
 
 		let debtCategoryId = debtData.categoryId || null;
