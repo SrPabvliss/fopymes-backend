@@ -9,6 +9,7 @@ import {
 	updateAmountSchema,
 	createBudgetTransactionSchema,
 } from "@/budgets/application/dtos/budget.dto";
+import { selectTransactionSchema } from "@/transactions/application/dtos/transaction.dto";
 
 const tags = ["Budgets"];
 
@@ -340,6 +341,36 @@ export const createBudgetTransaction = createRoute({
 	},
 });
 
+export const getTransactions = createRoute({
+	path: "/budgets/:id/transactions",
+	method: "get",
+	tags,
+	request: {
+	  params: z.object({
+		id: z.string().regex(/^\d+$/).transform(Number),
+	  }),
+	},
+	responses: {
+	  [HttpStatusCodes.OK]: {
+		content: {
+		  "application/json": {
+			schema: baseResponseSchema(z.array(selectTransactionSchema)),
+		  },
+		},
+		description: "Budget transactions retrieved successfully",
+	  },
+	  [HttpStatusCodes.NOT_FOUND]: {
+		content: {
+		  "application/json": {
+			schema: errorResponseSchema,
+		  },
+		},
+		description: "Budget not found",
+	  },
+	},
+  });
+  
+
 export type ListRoute = typeof list;
 export type GetByIdRoute = typeof getById;
 export type ListByUserRoute = typeof listByUser;
@@ -350,3 +381,4 @@ export type UpdateRoute = typeof update;
 export type DeleteRoute = typeof delete_;
 export type UpdateAmountRoute = typeof updateAmount;
 export type CreateBudgetTransactionRoute = typeof createBudgetTransaction;
+export type GetTransactionsRoute = typeof getTransactions;

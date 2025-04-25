@@ -8,6 +8,7 @@ import {
 	CreateRoute,
 	DeleteRoute,
 	GetByIdRoute,
+	GetTransactionsRoute,
 	ListByMonthRoute,
 	ListByUserRoute,
 	ListRoute,
@@ -19,21 +20,24 @@ import { BudgetApiAdapter } from "@/budgets/infrastructure/adapters/budget-api.a
 import { PgTransactionRepository } from "@/transactions/infrastructure/adapters/transaction.repository";
 import { TransactionApiAdapter } from "@/transactions/infrastructure/adapters/transaction-api.adapter";
 import { PgPaymentMethodRepository } from "@/payment-methods/infrastructure/adapters/payment-method.repository";
+import { ITransactionRepository } from "@/transactions/domain/ports/transaction-repository.port";
 
 export class BudgetService implements IBudgetService {
 	private static instance: BudgetService;
 
 	constructor(
 		private readonly budgetRepository: IBudgetRepository,
-		private readonly budgetUtils: BudgetUtilsService
+		private readonly budgetUtils: BudgetUtilsService,
+		private readonly transactionRepository: ITransactionRepository
 	) {}
 
 	public static getInstance(
 		budgetRepository: IBudgetRepository,
-		budgetUtils: BudgetUtilsService
+		budgetUtils: BudgetUtilsService,
+		transactionRepository: ITransactionRepository
 	): BudgetService {
 		if (!BudgetService.instance) {
-			BudgetService.instance = new BudgetService(budgetRepository, budgetUtils);
+			BudgetService.instance = new BudgetService(budgetRepository, budgetUtils, transactionRepository);
 		}
 		return BudgetService.instance;
 	}
@@ -407,6 +411,34 @@ export class BudgetService implements IBudgetService {
 		message: "Transaction created and budget updated successfully",
 	  },
 	  HttpStatusCodes.CREATED
+	);
+  });
+
+  getTransactions = createHandler<GetTransactionsRoute>(async (c) => {
+	const id = c.req.param("id");
+	
+	// Verificar que el presupuesto existe
+	const budget = await this.budgetRepository.findById(Number(id));
+	if (!budget) {
+	  return c.json(
+		{
+		  success: false,
+		  data: null,
+		  message: "Budget not found",
+		},
+		HttpStatusCodes.NOT_FOUND
+	  );
+	}
+	
+	const transactions = await this.transactionRepository.findByBudgetId(Number(id));
+	
+	return c.json(
+	  {
+		success: true,
+		data: TransactionApiAdapter.toApiResponseList(transactions),
+		message: "Budget transactions retrieved successfully",
+	  },
+	  HttpStatusCodes.OK
 	);
   });
 }
