@@ -1,10 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import DatabaseConnection from "@/core/infrastructure/database";
-<<<<<<< HEAD
 import { goal_contributions, goals } from "@/schema";
-=======
 import { goals, categories } from "@/schema";
->>>>>>> b17e9f362c17823e2013e46302a2ac702fa61d91
 import { IGoalRepository } from "@/goals/domain/ports/goal-repository.port";
 import { IGoal } from "@/goals/domain/entities/IGoal";
 import { ICategory } from "@/categories/domain/entities/ICategory";
@@ -32,6 +29,24 @@ export class PgGoalRepository implements IGoalRepository {
 			.leftJoin(categories, eq(goals.category_id, categories.id));
 
 		return result.map((row) => this.mapToEntity(row.goal, row.category));
+	}
+
+	async findAllWithLastContributionWithMoreThanOneWeekAgo(): Promise<IGoal[]> {
+		const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+		const result = await this.db
+		.select({
+			goal: goals,
+			latestContribution: sql`MAX(${goal_contributions.date})`,
+		})
+		.from(goals)
+		.leftJoin(goal_contributions, eq(goals.id, goal_contributions.goal_id))
+		.groupBy(goals.id)
+		.having(
+			sql`MAX(${goal_contributions.date}) < ${oneWeekAgo} OR MAX(${goal_contributions.date}) IS NULL`
+		);
+
+		return result.map((row) => this.mapToEntity(row.goal));
 	}
 
 	async findById(id: number): Promise<IGoal | null> {

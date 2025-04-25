@@ -21,11 +21,13 @@ import { startNotificationsCleanupJob } from "./core/infrastructure/cron/expired
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
+import { recalculateContributionAmountCron } from "./core/infrastructure/cron/recalculate-contribution-amount.cron";
 
 const app = createApp();
 
 // startScheduledTransactionsJob();
 startNotificationsCleanupJob();
+recalculateContributionAmountCron.start();
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
