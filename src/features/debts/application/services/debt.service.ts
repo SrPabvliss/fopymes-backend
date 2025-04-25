@@ -16,6 +16,7 @@ import {
 import { IDebtService } from "@/debts/domain/ports/debt-service.port";
 import { DebtApiAdapter } from "@/debts/infrastructure/adapters/debt-api.adapter";
 import { IDebt } from "@/debts/domain/entities/IDebt";
+import { TransactionApiAdapter } from "@/transactions/infrastructure/adapters/transaction-api.adapter";
 
 export class DebtService implements IDebtService {
 	private static instance: DebtService;
@@ -257,48 +258,70 @@ export class DebtService implements IDebtService {
 	payDebt = createHandler<PayDebtRoute>(async (c) => {
 		const id = c.req.param("id");
 		const userId = c.req.param("userId");
-		const { amount } = c.req.valid("json");
-
-		const validation = await this.debtUtils.validateDebt(
-			Number(id),
-			Number(userId),
-			amount
-		);
-
-		if (!validation.isValid) {
-			return c.json(
-				{
-					success: false,
-					data: null,
-					message: validation.message || "Invalid payment",
-				},
-				HttpStatusCodes.BAD_REQUEST
-			);
-		}
-
-		const debt = validation.debt!;
-
-		await this.transactionRepository.create({
-			userId: Number(userId),
-			amount: amount,
-			type: "EXPENSE",
-			categoryId: debt.categoryId || 0,
-			description: `Payment for debt: ${debt.description}`,
-			debtId: debt.id,
-		});
-
-		const updatedDebt = await this.debtRepository.updatePendingAmount(
-			debt.id,
-			amount
-		);
-
+		const { amount, payment_method_id, description } = c.req.valid("json");
+  
+	const validation = await this.debtUtils.validateDebt(
+	  Number(id),
+	  Number(userId),
+	  amount
+	);
+  
+	if (!validation.isValid) {
+	  return c.json(
+		{
+		  success: false,
+		  data: null,
+		  message: validation.message || "Invalid payment",
+		},
+		HttpStatusCodes.BAD_REQUEST
+	  );
+	}
+  
+	const debt = validation.debt!;
+  
+	if (payment_method_id) {
+	  const paymentMethodValid = await this.debtUtils.validatePaymentMethod(
+		payment_method_id,
+		Number(userId)
+	  );
+	  
+	  if (!paymentMethodValid) {
 		return c.json(
-			{
-				success: true,
-				data: DebtApiAdapter.toApiResponse(updatedDebt),
-				message: "Debt payment processed successfully",
-			},
-			HttpStatusCodes.OK
+		  {
+			success: false,
+			data: null,
+			message: "Invalid payment method",
+		  },
+		  HttpStatusCodes.BAD_REQUEST
 		);
+	  }
+	}
+  
+	const transaction = await this.transactionRepository.create({
+	  userId: Number(userId),
+	  amount: amount,
+	  type: "EXPENSE",
+	  categoryId: debt.categoryId,
+	  description: description || `Pago de deuda: ${debt.description}`,
+	  paymentMethodId: payment_method_id || null,
+	  debtId: debt.id,
 	});
+  
+	const updatedDebt = await this.debtRepository.updatePendingAmount(
+	  debt.id,
+	  amount
+	);
+  
+	return c.json(
+	  {
+		success: true,
+		data: {
+		  ...DebtApiAdapter.toApiResponse(updatedDebt),
+		  transaction: TransactionApiAdapter.toApiResponse(transaction)
+		},
+		message: "Debt payment processed successfully",
+	  },
+	  HttpStatusCodes.OK
+	);
+  });
 }
