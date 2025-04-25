@@ -16,15 +16,19 @@ import {
 import { IDebtService } from "@/debts/domain/ports/debt-service.port";
 import { DebtApiAdapter } from "@/debts/infrastructure/adapters/debt-api.adapter";
 import { IDebt } from "@/debts/domain/entities/IDebt";
+import { DebtNotificationService } from "./debt-notification.service";
 
 export class DebtService implements IDebtService {
 	private static instance: DebtService;
+	private debtNotificationService: DebtNotificationService;
 
 	constructor(
 		private readonly debtRepository: IDebtRepository,
 		private readonly transactionRepository: ITransactionRepository,
 		private readonly debtUtils: DebtUtilsService
-	) {}
+	) {
+		this.debtNotificationService = DebtNotificationService.getInstance();
+	}
 
 	public static getInstance(
 		debtRepository: IDebtRepository,
@@ -176,6 +180,13 @@ export class DebtService implements IDebtService {
 			categoryId: data.category_id || null,
 		});
 
+		// Send notification for newly created debt
+		try {
+			await this.debtNotificationService.notifyDebtCreated(debt);
+		} catch (error) {
+			console.error('Error sending debt creation notification:', error);
+		}
+
 		return c.json(
 			{
 				success: true,
@@ -217,6 +228,32 @@ export class DebtService implements IDebtService {
 			Number(id),
 			updateData
 		);
+
+		// Send notifications for relevant updates
+		try {
+			// Check for due date changes
+			if (data.due_date !== undefined) {
+				await this.debtNotificationService.checkDueDateApproaching(updatedDebt);
+			}
+
+			// Check if payment status changed
+			if (data.paid !== undefined && debt.paid !== data.paid) {
+				await this.debtNotificationService.notifyDebtPaymentStatusChanged(
+					updatedDebt, 
+					debt.paid
+				);
+			}
+
+			// Check if amount changed
+			if (data.pending_amount !== undefined && debt.pendingAmount !== Number(data.pending_amount)) {
+				await this.debtNotificationService.notifyDebtAmountUpdated(
+					updatedDebt, 
+					debt.pendingAmount
+				);
+			}
+		} catch (error) {
+			console.error('Error sending debt update notification:', error);
+		}
 
 		return c.json(
 			{
@@ -291,6 +328,24 @@ export class DebtService implements IDebtService {
 			debt.id,
 			amount
 		);
+
+		// Send notification about debt payment
+		try {
+			await this.debtNotificationService.notifyDebtAmountUpdated(
+				updatedDebt,
+				debt.pendingAmount
+			);
+			
+			// If the debt is now fully paid, send a congratulation notification
+			if (updatedDebt.paid && !debt.paid) {
+				await this.debtNotificationService.notifyDebtPaymentStatusChanged(
+					updatedDebt,
+					debt.paid
+				);
+			}
+		} catch (error) {
+			console.error('Error sending debt payment notification:', error);
+		}
 
 		return c.json(
 			{

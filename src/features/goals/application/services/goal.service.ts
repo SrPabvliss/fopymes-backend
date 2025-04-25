@@ -17,14 +17,18 @@ import { GoalApiAdapter } from "@/goals/infrastucture/adapters/goal-api.adapter"
 import { GoalScheduleGeneratorService } from "./goal-schedule-generator.service";
 import { PgGoalContributionScheduleRepository } from "@/goals/infrastucture/adapters/goal-contribution-schedule.repository";
 import { IGoal } from "@/goals/domain/entities/IGoal";
+import { GoalNotificationService } from "./goal-notification.service";
 
 export class GoalService implements IGoalService {
 	private static instance: GoalService;
+	private goalNotificationService: GoalNotificationService;
 
 	constructor(
 		private readonly goalRepository: IGoalRepository,
 		private readonly goalUtils: GoalUtilsService
-	) {}
+	) {
+		this.goalNotificationService = GoalNotificationService.getInstance();
+	}
 
 	public static getInstance(
 		goalRepository: IGoalRepository,
@@ -173,6 +177,15 @@ export class GoalService implements IGoalService {
 		
 		await scheduleGenerator.generateSchedules(goal);
 
+		// Send notification for newly created goal
+		try {
+			if (goal.sharedUserId) {
+				await this.goalNotificationService.notifyGoalShared(goal, goal.sharedUserId);
+			}
+		} catch (error) {
+			console.error('Error sending goal notification:', error);
+		}
+
 		return c.json(
 			{
 				success: true,
@@ -254,6 +267,30 @@ export class GoalService implements IGoalService {
 			await scheduleGenerator.recalculateSchedules(updatedGoal);
 		}
 
+		// Send notification if the goal is now shared with someone new
+		try {
+			if (data.shared_user_id !== undefined && 
+				data.shared_user_id !== null && 
+				goal.sharedUserId !== data.shared_user_id) {
+				await this.goalNotificationService.notifyGoalShared(updatedGoal, data.shared_user_id);
+			}
+
+			// Check deadline approaching
+			if (data.end_date !== undefined) {
+				await this.goalNotificationService.checkDeadlineApproaching(updatedGoal);
+			}
+
+			// Check progress milestones if current amount was updated
+			if (data.current_amount !== undefined && goal.currentAmount !== Number(data.current_amount)) {
+				await this.goalNotificationService.checkProgressMilestones(
+					updatedGoal, 
+					goal.currentAmount
+				);
+			}
+		} catch (error) {
+			console.error('Error sending goal update notification:', error);
+		}
+
 		return c.json(
 			{
 				success: true,
@@ -312,10 +349,24 @@ export class GoalService implements IGoalService {
 			);
 		}
 
+		// Get the goal before update to have the previous amount
+		const goal = await this.goalRepository.findById(Number(id));
+		const previousAmount = goal ? goal.currentAmount : 0;
+
 		const updatedGoal = await this.goalRepository.updateProgress(
 			Number(id),
 			amount
 		);
+
+		// Check and send progress milestone notifications
+		try {
+			await this.goalNotificationService.checkProgressMilestones(
+				updatedGoal,
+				previousAmount
+			);
+		} catch (error) {
+			console.error('Error sending goal progress notification:', error);
+		}
 
 		return c.json(
 			{

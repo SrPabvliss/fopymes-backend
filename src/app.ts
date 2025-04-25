@@ -16,8 +16,13 @@ import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-co
 import notifications from "@/notifications/infrastructure/controllers/notification.controller";
 import DatabaseConnection from "@/db";
 import email from "@/email/infrastructure/controllers/email.controller";
+import notificationSocket from "@/notifications/infrastructure/websocket/notification-socket.router";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 import { startNotificationsCleanupJob } from "./core/infrastructure/cron/expired-notifications.cron";
+import { startDebtNotificationsJob } from "./core/infrastructure/cron/debt-notifications.cron";
+import { startBudgetSummaryJob } from "./core/infrastructure/cron/budget-notifications.cron";
+import { startGoalNotificationsJob } from "./core/infrastructure/cron/goal-notifications.cron";
+import { startFinancialSuggestionsJob } from "./core/infrastructure/cron/financial-suggestions.cron";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
@@ -26,6 +31,10 @@ const app = createApp();
 
 // startScheduledTransactionsJob();
 startNotificationsCleanupJob();
+startDebtNotificationsJob();
+startBudgetSummaryJob();
+startGoalNotificationsJob();
+startFinancialSuggestionsJob();
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
@@ -73,6 +82,7 @@ const routes = [
   goalContributionSchedules,
   notifications,
   email,
+  notificationSocket,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
