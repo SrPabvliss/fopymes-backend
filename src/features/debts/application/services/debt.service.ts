@@ -18,6 +18,7 @@ import { IDebtService } from "@/debts/domain/ports/debt-service.port";
 import { DebtApiAdapter } from "@/debts/infrastructure/adapters/debt-api.adapter";
 import { IDebt } from "@/debts/domain/entities/IDebt";
 import { TransactionApiAdapter } from "@/transactions/infrastructure/adapters/transaction-api.adapter";
+import { IPaymentMethodRepository } from "@/payment-methods/domain/ports/payment-method-repository.port";
 
 export class DebtService implements IDebtService {
 	private static instance: DebtService;
@@ -25,19 +26,22 @@ export class DebtService implements IDebtService {
 	constructor(
 		private readonly debtRepository: IDebtRepository,
 		private readonly transactionRepository: ITransactionRepository,
-		private readonly debtUtils: DebtUtilsService
+		private readonly debtUtils: DebtUtilsService,
+		private readonly paymentMethodRepository: IPaymentMethodRepository
 	) {}
 
 	public static getInstance(
 		debtRepository: IDebtRepository,
 		transactionRepository: ITransactionRepository,
-		debtUtils: DebtUtilsService
+		debtUtils: DebtUtilsService,
+		paymentMethodRepository: IPaymentMethodRepository
 	): DebtService {
 		if (!DebtService.instance) {
 			DebtService.instance = new DebtService(
 				debtRepository,
 				transactionRepository,
-				debtUtils
+				debtUtils,
+				paymentMethodRepository
 			);
 		}
 		return DebtService.instance;
@@ -303,8 +307,10 @@ export class DebtService implements IDebtService {
 	  amount: amount,
 	  type: "EXPENSE",
 	  categoryId: debt.categoryId,
+	  category: debt.category ?? null,
 	  description: description || `Pago de deuda: ${debt.description}`,
 	  paymentMethodId: payment_method_id || null,
+	  paymentMethod: payment_method_id ? await this.paymentMethodRepository.findById(payment_method_id) : null,
 	  debtId: debt.id,
 	});
   
