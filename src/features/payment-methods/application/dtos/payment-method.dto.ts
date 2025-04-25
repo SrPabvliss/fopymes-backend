@@ -3,7 +3,16 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const paymentMethodBaseSchema = createInsertSchema(payment_methods);
-export const selectPaymentMethodSchema = createSelectSchema(payment_methods);
+export const selectPaymentMethodSchema = createSelectSchema(payment_methods)
+	.extend({
+		created_at: z.date(),
+		updated_at: z.date(),
+	})
+	.transform((data) => ({
+		...data,
+		created_at: new Date(data.created_at),
+		updated_at: new Date(data.updated_at),
+	}));
 
 export const createPaymentMethodSchema = paymentMethodBaseSchema
 	.extend({

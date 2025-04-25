@@ -8,8 +8,8 @@ export class DebtApiAdapter {
 			id: debt.id,
 			user_id: debt.userId,
 			description: debt.description,
-			original_amount: debt.originalAmount,
-			pending_amount: debt.pendingAmount,
+			original_amount: Number(debt.originalAmount),
+			pending_amount: Number(debt.pendingAmount),
 			due_date: debt.dueDate,
 			paid: debt.paid,
 			creditor_id: debt.creditorId || null,
@@ -19,6 +19,13 @@ export class DebtApiAdapter {
 				name: debt.category.name,
 				description: debt.category.description || null,
 			} : null,
+			creditor: debt.creditor ? {
+				id: debt.creditor.id,
+				name: debt.creditor.name,
+				email: debt.creditor.email,
+			} : null,
+			created_at: debt.createdAt,
+			updated_at: debt.updatedAt,
 		};
 	}
 

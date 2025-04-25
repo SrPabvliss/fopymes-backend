@@ -242,6 +242,8 @@ export class PgBudgetRepository implements IBudgetRepository {
 			limitAmount: Number(raw.limit_amount),
 			currentAmount: Number(raw.current_amount),
 			month: new Date(raw.month),
+			createdAt: raw.created_at,
+			updatedAt: raw.updated_at,
 		};
 	}
 }

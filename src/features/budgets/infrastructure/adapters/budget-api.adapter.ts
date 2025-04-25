@@ -17,6 +17,8 @@ export class BudgetApiAdapter {
 			limit_amount: Number(budget.limitAmount),
 			current_amount: Number(budget.currentAmount),
 			month: budget.month,
+			created_at: budget.createdAt,
+			updated_at: budget.updatedAt,
 		};
 	}
 

@@ -400,12 +400,16 @@ export class PgTransactionRepository implements ITransactionRepository {
 				type: raw.payment_method.type,
 				lastFourDigits: raw.payment_method.last_four_digits,
 				userId: raw.payment_method.user_id,
+				createdAt: raw.payment_method.created_at,
+				updatedAt: raw.payment_method.updated_at,
 			} : null,
 			date: raw.date,
 			scheduledTransactionId: raw.scheduled_transaction_id,
 			debtId: raw.debt_id,
 			budgetId: raw.budget_id,
 			contributionId: raw.contribution_id,
+			createdAt: raw.created_at,
+			updatedAt: raw.updated_at,
 		};
 	}
 

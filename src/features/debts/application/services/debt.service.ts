@@ -180,6 +180,8 @@ export class DebtService implements IDebtService {
 			paid: false,
 			creditorId: data.creditor_id || null,
 			categoryId: data.category_id || null,
+			createdAt: new Date(),
+			updatedAt: new Date(),
 		});
 
 		return c.json(
@@ -312,6 +314,8 @@ export class DebtService implements IDebtService {
 	  paymentMethodId: payment_method_id || null,
 	  paymentMethod: payment_method_id ? await this.paymentMethodRepository.findById(payment_method_id) : null,
 	  debtId: debt.id,
+	  createdAt: new Date(),
+	  updatedAt: new Date(),
 	});
   
 	const updatedDebt = await this.debtRepository.updatePendingAmount(

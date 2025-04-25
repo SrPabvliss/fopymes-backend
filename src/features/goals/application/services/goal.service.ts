@@ -173,6 +173,8 @@ export class GoalService implements IGoalService {
 			endDate: new Date(data.end_date),
 			contributionFrequency: data.contribution_frequency || 0,
 			contributionAmount: data.contribution_amount || 0,
+			createdAt: new Date(),
+			updatedAt: new Date(),
 		});
 
 		const scheduleGenerator = GoalScheduleGeneratorService.getInstance(
@@ -335,37 +337,37 @@ export class GoalService implements IGoalService {
 		);
 	});
 
-getTransactions = createHandler<GetTransactionsRoute>(async (c) => {
-	const id = c.req.param("id");
-	
-	const goal = await this.goalRepository.findById(Number(id));
-	if (!goal) {
-	  return c.json(
-		{
-		  success: false,
-		  data: null,
-		  message: "Goal not found",
-		},
-		HttpStatusCodes.NOT_FOUND
-	  );
-	}
-	
-	const contributions = await this.goalContributionRepository.findByGoalId(Number(id));
-	const contributionIds = contributions.map(contribution => contribution.id);
-	
-	const transactions = [];
-	for (const contributionId of contributionIds) {
-	  const contributionTransactions = await this.transactionRepository.findByContributionId(contributionId);
-	  transactions.push(...contributionTransactions);
-	}
-	
-	return c.json(
-	  {
-		success: true,
-		data: TransactionApiAdapter.toApiResponseList(transactions),
-		message: "Goal transactions retrieved successfully",
-	  },
-	  HttpStatusCodes.OK
-	);
-  });
+	getTransactions = createHandler<GetTransactionsRoute>(async (c) => {
+		const id = c.req.param("id");
+		
+		const goal = await this.goalRepository.findById(Number(id));
+		if (!goal) {
+		  return c.json(
+			{
+			  success: false,
+			  data: null,
+			  message: "Goal not found",
+			},
+			HttpStatusCodes.NOT_FOUND
+		  );
+		}
+		
+		const contributions = await this.goalContributionRepository.findByGoalId(Number(id));
+		const contributionIds = contributions.map(contribution => contribution.id);
+		
+		const transactions = [];
+		for (const contributionId of contributionIds) {
+		  const contributionTransactions = await this.transactionRepository.findByContributionId(contributionId);
+		  transactions.push(...contributionTransactions);
+		}
+		
+		return c.json(
+		  {
+			success: true,
+			data: TransactionApiAdapter.toApiResponseList(transactions),
+			message: "Goal transactions retrieved successfully",
+		  },
+		  HttpStatusCodes.OK
+		);
+	  });
 }

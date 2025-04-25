@@ -12,11 +12,15 @@ export const budgetBaseSchema = createInsertSchema(budgets);
 export const selectBudgetSchema = createSelectSchema(budgets)
 	.extend({
 		category: categorySchema.nullable(),
+		created_at: z.date(),
+		updated_at: z.date(),
 	})
 	.transform((data) => ({
 		...data,
 		limit_amount: Number(data.limit_amount),
 		current_amount: Number(data.current_amount),
+		created_at: new Date(data.created_at),
+		updated_at: new Date(data.updated_at),
 	}));
 
 export const createBudgetSchema = budgetBaseSchema

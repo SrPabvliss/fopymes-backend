@@ -12,12 +12,16 @@ export const goalBaseSchema = createInsertSchema(goals);
 export const selectGoalSchema = createSelectSchema(goals)
 	.extend({
 		category: categorySchema.nullable(),
+		created_at: z.date(),
+		updated_at: z.date(),
 	})
 	.transform((data) => ({
 		...data,
 		target_amount: Number(data.target_amount),
 		current_amount: Number(data.current_amount),
 		contribution_amount: Number(data.contribution_amount),
+		created_at: new Date(data.created_at),
+		updated_at: new Date(data.updated_at),
 	}));
 
 export const createGoalSchema = goalBaseSchema
@@ -64,6 +68,6 @@ export const updateProgressSchema = z.object({
 });
 
 export type GoalResponse = z.infer<typeof selectGoalSchema>;
-export type CreateGoalDTO = z.infer<typeof createGoalSchema>;
+export type CreateGoalDto = z.infer<typeof createGoalSchema>;
 export type UpdateGoalDTO = z.infer<typeof updateGoalSchema>;
 export type UpdateProgressDTO = z.infer<typeof updateProgressSchema>;

@@ -13,6 +13,8 @@ export class PaymentMethodApiAdapter {
 			name: paymentMethod.name,
 			type: paymentMethod.type,
 			last_four_digits: paymentMethod.lastFourDigits || null,
+			created_at: paymentMethod.createdAt,
+			updated_at: paymentMethod.updatedAt,
 		};
 	}
 
