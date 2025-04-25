@@ -1,4 +1,4 @@
-# FOPYMES Backend Architecture
+# FOPYWAY Backend Architecture
 
 ## Project Structure
 
