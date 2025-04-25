@@ -1,8 +1,9 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, gte, lte } from "drizzle-orm";
 import DatabaseConnection from "@/core/infrastructure/database";
 import { categories, goal_contributions, goals } from "@/schema";
 import { IGoalRepository } from "@/goals/domain/ports/goal-repository.port";
 import { IGoal } from "@/goals/domain/entities/IGoal";
+import { ReportFilters } from "../../../reports/domain/entities/report.entity";
 
 export class PgGoalRepository implements IGoalRepository {
   private db = DatabaseConnection.getInstance().db;
@@ -182,6 +183,41 @@ export class PgGoalRepository implements IGoalRepository {
       : null;
 
     return this.mapToEntity(result[0], category);
+  }
+
+  async findByFilters(filters: ReportFilters): Promise<IGoal[]> {
+    const conditions = [];
+
+    if (filters.userId) {
+      conditions.push(eq(goals.user_id, Number(filters.userId)));
+    }
+
+    if (filters.categoryId) {
+      conditions.push(eq(goals.category_id, Number(filters.categoryId)));
+    }
+
+    if (filters.startDate) {
+      conditions.push(gte(goals.end_date, filters.startDate));
+    }
+
+    if (filters.endDate) {
+      conditions.push(lte(goals.end_date, filters.endDate));
+    }
+
+    if (filters.includeShared) {
+      conditions.push(sql`${goals.shared_user_id} IS NOT NULL`);
+    }
+
+    const result = await this.db
+      .select({
+        goal: goals,
+        category: categories,
+      })
+      .from(goals)
+      .leftJoin(categories, eq(goals.category_id, categories.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    return result.map((row) => this.mapToEntity(row.goal, row.category));
   }
 
   private mapToEntity(raw: any, category?: any): IGoal {

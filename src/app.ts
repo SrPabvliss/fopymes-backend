@@ -22,12 +22,23 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
 import { recalculateContributionAmountCron } from "./core/infrastructure/cron/recalculate-contribution-amount.cron";
+import { CleanupReportsCron } from "./features/reports/infrastructure/cron/cleanup-reports.cron";
+import { ReportServiceImpl } from "./features/reports/application/services/report.service";
+import { PgReportRepository } from "./features/reports/infrastructure/adapters/report.repository";
+import { PgBudgetRepository } from "./features/budgets/infrastructure/adapters/budget.repository";
+import { PgTransactionRepository } from "./features/transactions/infrastructure/adapters/transaction.repository";
+import { PgGoalRepository } from "./features/goals/infrastucture/adapters/goal.repository";
+import { PgGoalContributionRepository } from "./features/goals/infrastucture/adapters/goal-contribution.repository";
+import { ExcelService } from "./features/reports/infrastructure/services/excel.service";
+import { CSVService } from "./features/reports/infrastructure/services/csv.service";
+import reports from "./features/reports/infrastructure/controllers/report.controller";
 
 const app = createApp();
 
 // startScheduledTransactionsJob();
 startNotificationsCleanupJob();
 recalculateContributionAmountCron.start();
+
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
@@ -75,6 +86,7 @@ const routes = [
   goalContributionSchedules,
   notifications,
   email,
+  reports,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
