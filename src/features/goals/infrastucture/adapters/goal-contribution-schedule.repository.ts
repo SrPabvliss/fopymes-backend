@@ -89,7 +89,7 @@ export class PgGoalContributionScheduleRepository implements IGoalContributionSc
       .values({
         goal_id: scheduleData.goalId,
         user_id: scheduleData.userId,
-        scheduled_date: scheduleData.scheduledDate.toISOString(),
+        scheduled_date: scheduleData.scheduledDate ,
         amount: scheduleData.amount.toString(),
         status: scheduleData.status,
         contribution_id: scheduleData.contributionId || null,
@@ -103,7 +103,7 @@ export class PgGoalContributionScheduleRepository implements IGoalContributionSc
     const updateData: Record<string, any> = {};
 
     if (data.scheduledDate !== undefined) 
-      updateData.scheduled_date = data.scheduledDate.toISOString();
+      updateData.scheduled_date = data.scheduledDate;
     if (data.amount !== undefined) 
       updateData.amount = data.amount.toString();
     if (data.status !== undefined) 
@@ -159,7 +159,7 @@ export class PgGoalContributionScheduleRepository implements IGoalContributionSc
       id: raw.id,
       goalId: raw.goal_id,
       userId: raw.user_id,
-      scheduledDate: new Date(raw.scheduled_date),
+      scheduledDate: raw.scheduled_date,
       amount: Number(raw.amount),
       status: raw.status,
       contributionId: raw.contribution_id,

@@ -1,6 +1,6 @@
 import { and, eq, lte } from "drizzle-orm";
 import DatabaseConnection from "@/core/infrastructure/database";
-import { scheduled_transactions } from "@/schema";
+import { scheduled_transactions, categories } from "@/schema";
 import { IScheduledTransactionRepository } from "../../domain/ports/scheduled-transaction-repository.port";
 import { IScheduledTransaction } from "../../domain/entities/IScheduledTransaction";
 
@@ -21,14 +21,50 @@ export class PgScheduledTransactionRepository
 	}
 
 	async findAll(): Promise<IScheduledTransaction[]> {
-		const result = await this.db.select().from(scheduled_transactions);
+		const result = await this.db
+			.select({
+				id: scheduled_transactions.id,
+				user_id: scheduled_transactions.user_id,
+				name: scheduled_transactions.name,
+				amount: scheduled_transactions.amount,
+				category_id: scheduled_transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: scheduled_transactions.description,
+				payment_method_id: scheduled_transactions.payment_method_id,
+				frequency: scheduled_transactions.frequency,
+				next_execution_date: scheduled_transactions.next_execution_date,
+				active: scheduled_transactions.active,
+			})
+			.from(scheduled_transactions)
+			.leftJoin(categories, eq(scheduled_transactions.category_id, categories.id));
 		return result.map(this.mapToEntity);
 	}
 
 	async findById(id: number): Promise<IScheduledTransaction | null> {
 		const result = await this.db
-			.select()
+			.select({
+				id: scheduled_transactions.id,
+				user_id: scheduled_transactions.user_id,
+				name: scheduled_transactions.name,
+				amount: scheduled_transactions.amount,
+				category_id: scheduled_transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: scheduled_transactions.description,
+				payment_method_id: scheduled_transactions.payment_method_id,
+				frequency: scheduled_transactions.frequency,
+				next_execution_date: scheduled_transactions.next_execution_date,
+				active: scheduled_transactions.active,
+			})
 			.from(scheduled_transactions)
+			.leftJoin(categories, eq(scheduled_transactions.category_id, categories.id))
 			.where(eq(scheduled_transactions.id, id));
 
 		return result[0] ? this.mapToEntity(result[0]) : null;
@@ -36,8 +72,25 @@ export class PgScheduledTransactionRepository
 
 	async findByUserId(userId: number): Promise<IScheduledTransaction[]> {
 		const result = await this.db
-			.select()
+			.select({
+				id: scheduled_transactions.id,
+				user_id: scheduled_transactions.user_id,
+				name: scheduled_transactions.name,
+				amount: scheduled_transactions.amount,
+				category_id: scheduled_transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: scheduled_transactions.description,
+				payment_method_id: scheduled_transactions.payment_method_id,
+				frequency: scheduled_transactions.frequency,
+				next_execution_date: scheduled_transactions.next_execution_date,
+				active: scheduled_transactions.active,
+			})
 			.from(scheduled_transactions)
+			.leftJoin(categories, eq(scheduled_transactions.category_id, categories.id))
 			.where(eq(scheduled_transactions.user_id, userId));
 
 		return result.map(this.mapToEntity);
@@ -46,12 +99,29 @@ export class PgScheduledTransactionRepository
 	async findPendingExecutions(): Promise<IScheduledTransaction[]> {
 		const now = new Date();
 		const result = await this.db
-			.select()
+			.select({
+				id: scheduled_transactions.id,
+				user_id: scheduled_transactions.user_id,
+				name: scheduled_transactions.name,
+				amount: scheduled_transactions.amount,
+				category_id: scheduled_transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: scheduled_transactions.description,
+				payment_method_id: scheduled_transactions.payment_method_id,
+				frequency: scheduled_transactions.frequency,
+				next_execution_date: scheduled_transactions.next_execution_date,
+				active: scheduled_transactions.active,
+			})
 			.from(scheduled_transactions)
+			.leftJoin(categories, eq(scheduled_transactions.category_id, categories.id))
 			.where(
 				and(
 					eq(scheduled_transactions.active, true),
-					lte(scheduled_transactions.next_execution_date, now.toISOString())
+					lte(scheduled_transactions.next_execution_date, now)
 				)
 			);
 
@@ -71,7 +141,7 @@ export class PgScheduledTransactionRepository
 				description: scheduledData.description || null,
 				payment_method_id: scheduledData.paymentMethodId || null,
 				frequency: scheduledData.frequency,
-				next_execution_date: scheduledData.nextExecutionDate.toISOString(),
+				next_execution_date: scheduledData.nextExecutionDate,
 				active: scheduledData.active,
 			})
 			.returning();
@@ -87,7 +157,7 @@ export class PgScheduledTransactionRepository
 
 		if (scheduledData.name !== undefined) updateData.name = scheduledData.name;
 		if (scheduledData.amount !== undefined)
-			updateData.amount = scheduledData.amount.toString();
+			updateData.amount = scheduledData.amount;
 		if (scheduledData.categoryId !== undefined)
 			updateData.category_id = scheduledData.categoryId;
 		if (scheduledData.description !== undefined)
@@ -98,7 +168,7 @@ export class PgScheduledTransactionRepository
 			updateData.frequency = scheduledData.frequency;
 		if (scheduledData.nextExecutionDate !== undefined)
 			updateData.next_execution_date =
-				scheduledData.nextExecutionDate.toISOString();
+				scheduledData.nextExecutionDate;
 		if (scheduledData.active !== undefined)
 			updateData.active = scheduledData.active;
 
@@ -127,6 +197,7 @@ export class PgScheduledTransactionRepository
 			name: raw.name,
 			amount: Number(raw.amount),
 			categoryId: raw.category_id || null,
+			category: raw.category || null,
 			description: raw.description,
 			paymentMethodId: raw.payment_method_id,
 			frequency: raw.frequency,

@@ -8,8 +8,8 @@ export class GoalContributionScheduleApiAdapter {
       id: schedule.id,
       goal_id: schedule.goalId,
       user_id: schedule.userId,
-      scheduled_date: schedule.scheduledDate.toISOString(),
-      amount: schedule.amount.toString(),
+      scheduled_date: schedule.scheduledDate,
+      amount: Number(schedule.amount),
       status: schedule.status,
       contribution_id: schedule.contributionId || null,
     };

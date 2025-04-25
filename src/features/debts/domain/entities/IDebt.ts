@@ -1,3 +1,5 @@
+import { ICategory } from "@/categories/domain/entities/ICategory";
+
 export interface IDebt {
 	id: number;
 	userId: number;
@@ -6,6 +8,7 @@ export interface IDebt {
 	pendingAmount: number;
 	dueDate: Date;
 	paid: boolean;
-	creditorId?: number | null;
-	categoryId?: number | null;
+	creditorId: number | null;
+	categoryId: number | null;
+	category?: ICategory| null;
 }
