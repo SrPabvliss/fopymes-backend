@@ -71,15 +71,15 @@ export const transactions = pgTable(
       .notNull(),
     scheduled_transaction_id: integer("scheduled_transaction_id"),
     debt_id: integer("debt_id").references(() => debts.id),
-    contribution_id: integer("contribution_id").references(
-      () => goal_contributions.id
-    ),
+    contribution_id: integer("contribution_id").references(() => goal_contributions.id),
+    budget_id: integer("budget_id").references(() => budgets.id),
   },
   (table) => {
     return {
       user_idx: index("tx_user_idx").on(table.user_id),
       date_idx: index("tx_date_idx").on(table.date),
       category_idx: index("tx_category_idx").on(table.category_id),
+      budget_idx: index("tx_budget_idx").on(table.budget_id),
     };
   }
 );

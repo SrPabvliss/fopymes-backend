@@ -18,6 +18,7 @@ export class TransactionApiAdapter {
 			scheduled_transaction_id: transaction.scheduledTransactionId || null,
 			debt_id: transaction.debtId || null,
 			contribution_id: transaction.contributionId || null,
+			budget_id: transaction.budgetId || null,
 		};
 	}
 

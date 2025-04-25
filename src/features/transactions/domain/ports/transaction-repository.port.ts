@@ -39,4 +39,7 @@ export interface ITransactionRepository {
 			expense: number;
 		}>
 	>;
+	findByDebtId(debtId: number): Promise<ITransaction[]>;
+	findByContributionId(contributionId: number): Promise<ITransaction[]>;
+	findByBudgetId(budgetId: number): Promise<ITransaction[]>;
 }

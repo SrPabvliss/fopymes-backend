@@ -268,6 +268,7 @@ export class PgTransactionRepository implements ITransactionRepository {
 			date: raw.date,
 			scheduledTransactionId: raw.scheduled_transaction_id,
 			debtId: raw.debt_id,
+			budgetId: raw.budget_id, 
 		};
 	}
 
@@ -326,4 +327,28 @@ export class PgTransactionRepository implements ITransactionRepository {
 			throw error;
 		}
 	}
+
+	async findByDebtId(debtId: number): Promise<ITransaction[]> {
+		const result = await this.db
+		  .select()
+		  .from(transactions)
+		  .where(eq(transactions.debt_id, debtId));
+		return result.map(this.mapToEntity);
+	  }
+	  
+	  async findByContributionId(contributionId: number): Promise<ITransaction[]> {
+		const result = await this.db
+		  .select()
+		  .from(transactions)
+		  .where(eq(transactions.contribution_id, contributionId));
+		return result.map(this.mapToEntity);
+	  }
+	  
+	  async findByBudgetId(budgetId: number): Promise<ITransaction[]> {
+		const result = await this.db
+		  .select()
+		  .from(transactions)
+		  .where(eq(transactions.budget_id, budgetId));
+		return result.map(this.mapToEntity);
+	  }
 }
