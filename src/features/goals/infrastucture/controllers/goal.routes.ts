@@ -8,6 +8,7 @@ import {
 	updateGoalSchema,
 	updateProgressSchema,
 } from "@/goals/application/dtos/goal.dto";
+import { selectTransactionSchema } from "@/transactions/application/dtos/transaction.dto";
 
 const tags = ["Goals"];
 
@@ -276,6 +277,35 @@ export const updateProgress = createRoute({
 	},
 });
 
+export const getTransactions = createRoute({
+	path: "/goals/:id/transactions",
+	method: "get",
+	tags,
+	request: {
+	  params: z.object({
+		id: z.string().regex(/^\d+$/).transform(Number),
+	  }),
+	},
+	responses: {
+	  [HttpStatusCodes.OK]: {
+		content: {
+		  "application/json": {
+			schema: baseResponseSchema(z.array(selectTransactionSchema)),
+		  },
+		},
+		description: "Goal transactions retrieved successfully",
+	  },
+	  [HttpStatusCodes.NOT_FOUND]: {
+		content: {
+		  "application/json": {
+			schema: errorResponseSchema,
+		  },
+		},
+		description: "Goal not found",
+	  },
+	},
+});  
+
 export type ListRoute = typeof list;
 export type CreateRoute = typeof create;
 export type UpdateRoute = typeof update;
@@ -284,3 +314,4 @@ export type GetByIdRoute = typeof getById;
 export type ListByUserRoute = typeof listByUser;
 export type ListSharedRoute = typeof listShared;
 export type UpdateProgressRoute = typeof updateProgress;
+export type GetTransactionsRoute = typeof getTransactions;

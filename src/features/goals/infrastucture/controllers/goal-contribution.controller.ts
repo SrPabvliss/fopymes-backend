@@ -4,15 +4,19 @@ import { PgGoalContributionRepository } from "../adapters/goal-contribution.repo
 import { PgGoalRepository } from "../adapters/goal.repository";
 import { PgTransactionRepository } from "@/transactions/infrastructure/adapters/transaction.repository";
 import * as routes from "./goal-contribution.route";
+import { GoalUtilsService } from "@/goals/application/services/goal-utils.service";
+import { PgUserRepository } from "@/users/infrastructure/adapters/user.repository";
 
 const goalContributionRepository = PgGoalContributionRepository.getInstance();
 const goalRepository = PgGoalRepository.getInstance();
 const transactionRepository = PgTransactionRepository.getInstance();
-
+const userRepository = PgUserRepository.getInstance();
+const goalUtils = GoalUtilsService.getInstance(goalRepository, userRepository);
 const goalContributionService = GoalContributionService.getInstance(
   goalContributionRepository,
   goalRepository,
-  transactionRepository
+  transactionRepository,
+  goalUtils
 );
 
 const router = createRouter()

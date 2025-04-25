@@ -7,6 +7,7 @@ import {
 	CreateRoute,
 	DeleteRoute,
 	GetByIdRoute,
+	GetTransactionsRoute,
 	ListByUserRoute,
 	ListRoute,
 	ListSharedRoute,
@@ -17,21 +18,28 @@ import { GoalApiAdapter } from "@/goals/infrastucture/adapters/goal-api.adapter"
 import { GoalScheduleGeneratorService } from "./goal-schedule-generator.service";
 import { PgGoalContributionScheduleRepository } from "@/goals/infrastucture/adapters/goal-contribution-schedule.repository";
 import { IGoal } from "@/goals/domain/entities/IGoal";
+import { TransactionApiAdapter } from "@/transactions/infrastructure/adapters/transaction-api.adapter";
+import { IGoalContributionRepository } from "@/goals/domain/ports/goal-contribution-repository.port";
+import { ITransactionRepository } from "@/transactions/domain/ports/transaction-repository.port";
 
 export class GoalService implements IGoalService {
 	private static instance: GoalService;
 
 	constructor(
 		private readonly goalRepository: IGoalRepository,
-		private readonly goalUtils: GoalUtilsService
+		private readonly goalUtils: GoalUtilsService,
+		private readonly goalContributionRepository: IGoalContributionRepository,
+		private readonly transactionRepository: ITransactionRepository
 	) {}
 
 	public static getInstance(
 		goalRepository: IGoalRepository,
-		goalUtils: GoalUtilsService
+		goalUtils: GoalUtilsService,
+		goalContributionRepository: IGoalContributionRepository,
+		transactionRepository: ITransactionRepository
 	): GoalService {
 		if (!GoalService.instance) {
-			GoalService.instance = new GoalService(goalRepository, goalUtils);
+			GoalService.instance = new GoalService(goalRepository, goalUtils, goalContributionRepository, transactionRepository);
 		}
 		return GoalService.instance;
 	}
@@ -326,4 +334,38 @@ export class GoalService implements IGoalService {
 			HttpStatusCodes.OK
 		);
 	});
+
+getTransactions = createHandler<GetTransactionsRoute>(async (c) => {
+	const id = c.req.param("id");
+	
+	const goal = await this.goalRepository.findById(Number(id));
+	if (!goal) {
+	  return c.json(
+		{
+		  success: false,
+		  data: null,
+		  message: "Goal not found",
+		},
+		HttpStatusCodes.NOT_FOUND
+	  );
+	}
+	
+	const contributions = await this.goalContributionRepository.findByGoalId(Number(id));
+	const contributionIds = contributions.map(contribution => contribution.id);
+	
+	const transactions = [];
+	for (const contributionId of contributionIds) {
+	  const contributionTransactions = await this.transactionRepository.findByContributionId(contributionId);
+	  transactions.push(...contributionTransactions);
+	}
+	
+	return c.json(
+	  {
+		success: true,
+		data: TransactionApiAdapter.toApiResponseList(transactions),
+		message: "Goal transactions retrieved successfully",
+	  },
+	  HttpStatusCodes.OK
+	);
+  });
 }
