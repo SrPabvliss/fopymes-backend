@@ -1,10 +1,12 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import DatabaseConnection from "@/core/infrastructure/database";
 import { goal_contributions } from "@/schema";
 import { IGoalContributionRepository } from "@/goals/domain/ports/goal-contribution-repository.port";
 import { IGoalContribution } from "@/goals/domain/entities/IGoalContribution";
 
-export class PgGoalContributionRepository implements IGoalContributionRepository {
+export class PgGoalContributionRepository
+  implements IGoalContributionRepository
+{
   private db = DatabaseConnection.getInstance().db;
   private static instance: PgGoalContributionRepository;
 
@@ -12,7 +14,8 @@ export class PgGoalContributionRepository implements IGoalContributionRepository
 
   public static getInstance(): PgGoalContributionRepository {
     if (!PgGoalContributionRepository.instance) {
-      PgGoalContributionRepository.instance = new PgGoalContributionRepository();
+      PgGoalContributionRepository.instance =
+        new PgGoalContributionRepository();
     }
     return PgGoalContributionRepository.instance;
   }
@@ -49,7 +52,9 @@ export class PgGoalContributionRepository implements IGoalContributionRepository
     return result.map(this.mapToEntity);
   }
 
-  async create(contributionData: Omit<IGoalContribution, "id" | "date">): Promise<IGoalContribution> {
+  async create(
+    contributionData: Omit<IGoalContribution, "id" | "date">
+  ): Promise<IGoalContribution> {
     const result = await this.db
       .insert(goal_contributions)
       .values({
@@ -69,6 +74,19 @@ export class PgGoalContributionRepository implements IGoalContributionRepository
       .returning();
 
     return result.length > 0;
+  }
+
+  async findLatestContribution(
+    goalId: number
+  ): Promise<IGoalContribution | null> {
+    const result = await this.db
+      .select()
+      .from(goal_contributions)
+      .where(eq(goal_contributions.goal_id, goalId))
+      .orderBy(desc(goal_contributions.date))
+      .limit(1);
+
+    return result[0] ? this.mapToEntity(result[0]) : null;
   }
 
   private mapToEntity(raw: any): IGoalContribution {

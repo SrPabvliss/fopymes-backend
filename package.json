@@ -4,6 +4,8 @@
 	"scripts": {
 		"dev": "bun run --hot src/index.ts",
 		"build": "bun build src/index.ts --outdir dist --target node --external bun",
+		"migrate": "bun drizzle-kit migrate",
+		"generate": "bun drizzle-kit generate",
 		"db:seed": "bun run src/core/infrastructure/scripts/categories.seed.ts",
 		"db:clean": "bun run src/core/infrastructure/scripts/clean-database.ts",
 		"db:refresh": "bun run db:clean && bun run db:seed"
@@ -12,6 +14,7 @@
 		"@getbrevo/brevo": "^2.2.0",
 		"@hono/zod-openapi": "^0.18.3",
 		"@scalar/hono-api-reference": "^0.5.162",
+		"cron": "^4.3.0",
 		"date-fns": "^4.1.0",
 		"dotenv": "^16.4.5",
 		"dotenv-expand": "^12.0.1",
