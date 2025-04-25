@@ -5,4 +5,6 @@ export interface IPaymentMethod {
 	name: string;
 	type: string;
 	lastFourDigits?: string | null;
+	createdAt: Date;
+	updatedAt: Date;
 }

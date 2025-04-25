@@ -25,12 +25,24 @@ export const users = pgTable("users", {
   active: boolean("active").default(true).notNull(),
   recovery_token: varchar("recovery_token"),
   recovery_token_expires: timestamp("recovery_token_expires"),
+  created_at: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updated_at: timestamp("updated_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 });
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull().unique(),
   description: text("description"),
+  created_at: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updated_at: timestamp("updated_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 });
 
 export const payment_methods = pgTable(
@@ -44,6 +56,12 @@ export const payment_methods = pgTable(
     name: varchar("name").notNull(),
     type: varchar("type").notNull(),
     last_four_digits: varchar("last_four_digits"),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -76,6 +94,12 @@ export const transactions = pgTable(
       () => goal_contributions.id
     ),
     budget_id: integer("budget_id").references(() => budgets.id),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -110,6 +134,12 @@ export const goals = pgTable(
       scale: 2,
     }).notNull(),
     category_id: integer("category_id").references(() => categories.id),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -131,6 +161,12 @@ export const goal_contributions = pgTable(
       .notNull(),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
     date: timestamp("date")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
   },
@@ -159,6 +195,12 @@ export const goal_contribution_schedule = pgTable(
     contribution_id: integer("contribution_id").references(
       () => goal_contributions.id
     ),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -186,6 +228,12 @@ export const budgets = pgTable(
       .default("0")
       .notNull(),
     month: timestamp("month").notNull(),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -213,6 +261,12 @@ export const scheduled_transactions = pgTable(
     frequency: varchar("frequency").notNull(),
     next_execution_date: timestamp("next_execution_date").notNull(),
     active: boolean("active").default(true).notNull(),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -233,6 +287,12 @@ export const friends = pgTable(
       .references(() => users.id)
       .notNull(),
     connection_date: timestamp("connection_date")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
   },
@@ -264,6 +324,12 @@ export const debts = pgTable(
     paid: boolean("paid").default(false).notNull(),
     creditor_id: integer("creditor_id").references(() => users.id),
     category_id: integer("category_id").references(() => categories.id),
+    created_at: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {
@@ -290,6 +356,9 @@ export const notifications = pgTable(
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     expires_at: timestamp("expires_at"),
+    updated_at: timestamp("updated_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => {
     return {

@@ -7,6 +7,7 @@ export interface INotification {
   read: boolean;
   type: NotificationType;
   createdAt: Date;
+  updatedAt: Date;
   expiresAt?: Date | null;
 }
 

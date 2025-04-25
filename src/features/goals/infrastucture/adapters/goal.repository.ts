@@ -100,8 +100,8 @@ export class PgGoalRepository implements IGoalRepository {
         current_amount: goalData.currentAmount.toString(),
         end_date: goalData.endDate,
         category_id: goalData.categoryId,
-        contribution_frequency: goalData.contributionFrequency,
-        contribution_amount: goalData.contributionAmount.toString(),
+        contribution_frequency: goalData.contributionFrequency || 0,
+        contribution_amount: goalData.contributionAmount?.toString() || "0"
       })
       .returning();
 
@@ -132,7 +132,7 @@ export class PgGoalRepository implements IGoalRepository {
     if (goalData.contributionFrequency !== undefined)
       updateData.contribution_frequency = goalData.contributionFrequency;
     if (goalData.contributionAmount !== undefined)
-      updateData.contribution_amount = goalData.contributionAmount.toString();
+      updateData.contribution_amount = goalData.contributionAmount?.toString() || null;
 
     const result = await this.db
       .update(goals)
@@ -234,11 +234,12 @@ export class PgGoalRepository implements IGoalRepository {
         ? {
             id: category.id,
             name: category.name,
-            description: category.description,
           }
         : null,
       contributionFrequency: raw.contribution_frequency,
-      contributionAmount: Number(raw.contribution_amount),
+      contributionAmount: raw.contribution_amount ? Number(raw.contribution_amount) : 0,
+      createdAt: raw.created_at,
+      updatedAt: raw.updated_at
     };
   }
 }
