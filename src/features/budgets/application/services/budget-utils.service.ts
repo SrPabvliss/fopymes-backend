@@ -1,6 +1,7 @@
 import { IBudgetRepository } from "@/budgets/domain/ports/budget-repository.port";
 import { IUser } from "@/users/domain/entities/IUser";
 import { IUserRepository } from "@/users/domain/ports/user-repository.port";
+import { PgPaymentMethodRepository } from "@/payment-methods/infrastructure/adapters/payment-method.repository";
 
 export class BudgetUtilsService {
 	private static instance: BudgetUtilsService;
@@ -114,22 +115,20 @@ export class BudgetUtilsService {
 			};
 		}
 
-		const budgetMonth = new Date(budget.month);
-		// const currentMonth = new Date();
-		// if (
-		// 	budgetMonth.getMonth() !== currentMonth.getMonth() ||
-		// 	budgetMonth.getFullYear() !== currentMonth.getFullYear()
-		// ) {
-		// 	return {
-		// 		isValid: false,
-		// 		message: "Cannot update amount for past or future budgets",
-		// 		budget,
-		// 	};
-		// }
-
 		return {
 			isValid: true,
 			budget,
 		};
+	}
+
+	async validatePaymentMethod(paymentMethodId: number, userId: number): Promise<boolean> {
+		const paymentMethodRepository = PgPaymentMethodRepository.getInstance();
+		const paymentMethod = await paymentMethodRepository.findById(paymentMethodId);
+		
+		if (!paymentMethod) {
+			return false;
+		}
+		
+		return paymentMethod.userId === userId || paymentMethod.sharedUserId === userId;
 	}
 }
