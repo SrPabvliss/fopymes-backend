@@ -21,7 +21,7 @@ import { createMiddleware } from "hono/factory";
 
 const app = createApp();
 
-startScheduledTransactionsJob();
+// startScheduledTransactionsJob();
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests

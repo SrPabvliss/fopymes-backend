@@ -150,7 +150,7 @@ export const goal_contribution_schedule = pgTable(
     user_id: integer("user_id")
       .references(() => users.id)
       .notNull(),
-    scheduled_date: date("scheduled_date").notNull(),
+    scheduled_date: timestamp("scheduled_date").notNull(),
     amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
     status: varchar("status").notNull().default("pending"),
     contribution_id: integer("contribution_id").references(
