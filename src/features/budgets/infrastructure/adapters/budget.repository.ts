@@ -220,6 +220,18 @@ export class PgBudgetRepository implements IBudgetRepository {
 		return this.mapToEntity(result[0]);
 	}
 
+	async updateLimitAmount(id: number, amount: number): Promise<IBudget> {
+		const result = await this.db
+			.update(budgets)
+			.set({
+				limit_amount: amount.toString(),
+			})
+			.where(eq(budgets.id, id))
+			.returning();
+
+		return this.mapToEntity(result[0]);
+	}
+
 	private mapToEntity(raw: any): IBudget {
 		return {
 			id: raw.id,

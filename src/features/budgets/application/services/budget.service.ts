@@ -19,8 +19,8 @@ import {
 import { BudgetApiAdapter } from "@/budgets/infrastructure/adapters/budget-api.adapter";
 import { PgTransactionRepository } from "@/transactions/infrastructure/adapters/transaction.repository";
 import { TransactionApiAdapter } from "@/transactions/infrastructure/adapters/transaction-api.adapter";
-import { PgPaymentMethodRepository } from "@/payment-methods/infrastructure/adapters/payment-method.repository";
 import { ITransactionRepository } from "@/transactions/domain/ports/transaction-repository.port";
+import { IPaymentMethodRepository } from "@/payment-methods/domain/ports/payment-method-repository.port";
 
 export class BudgetService implements IBudgetService {
 	private static instance: BudgetService;
@@ -28,16 +28,18 @@ export class BudgetService implements IBudgetService {
 	constructor(
 		private readonly budgetRepository: IBudgetRepository,
 		private readonly budgetUtils: BudgetUtilsService,
-		private readonly transactionRepository: ITransactionRepository
+		private readonly transactionRepository: ITransactionRepository,
+		private readonly paymentMethodRepository: IPaymentMethodRepository
 	) {}
 
 	public static getInstance(
 		budgetRepository: IBudgetRepository,
 		budgetUtils: BudgetUtilsService,
-		transactionRepository: ITransactionRepository
+		transactionRepository: ITransactionRepository,
+		paymentMethodRepository: IPaymentMethodRepository
 	): BudgetService {
 		if (!BudgetService.instance) {
-			BudgetService.instance = new BudgetService(budgetRepository, budgetUtils, transactionRepository);
+			BudgetService.instance = new BudgetService(budgetRepository, budgetUtils, transactionRepository, paymentMethodRepository);
 		}
 		return BudgetService.instance;
 	}
@@ -344,74 +346,78 @@ export class BudgetService implements IBudgetService {
 		const userId = c.req.param("userId");
 		const data = c.req.valid("json");
   
-	const budget = await this.budgetRepository.findById(Number(budgetId));
-	if (!budget) {
-	  return c.json(
-		{
-		  success: false,
-		  data: null,
-		  message: "Budget not found",
-		},
-		HttpStatusCodes.NOT_FOUND
-	  );
-	}
-  
-	// Validar que el usuario tiene acceso a este presupuesto
-	if (!(await this.budgetUtils.canAccess(Number(budgetId), Number(userId)))) {
-	  return c.json(
-		{
-		  success: false,
-		  data: null,
-		  message: "You don't have access to this budget",
-		},
-		HttpStatusCodes.BAD_REQUEST
-	  );
-	}
-  
-	// Validar método de pago si se proporciona
-	if (data.payment_method_id) {
-	  const paymentMethodValid = await this.budgetUtils.validatePaymentMethod(
-		data.payment_method_id,
-		Number(userId)
-	  );
-	  
-	  if (!paymentMethodValid) {
+		const budget = await this.budgetRepository.findById(Number(budgetId));
+		if (!budget) {
 		return c.json(
-		  {
+			{
 			success: false,
 			data: null,
-			message: "Invalid payment method",
-		  },
-		  HttpStatusCodes.BAD_REQUEST
+			message: "Budget not found",
+			},
+			HttpStatusCodes.NOT_FOUND
 		);
-	  }
-	}
-  
-	const categoryId = data.category_id || budget.categoryId;
-  
-	const transactionRepository = PgTransactionRepository.getInstance();
-	const transaction = await transactionRepository.create({
-	  userId: Number(userId),
-	  amount: data.amount,
-	  type: data.type,
-	  categoryId: categoryId,
-	  description: data.description || `Transacción: ${budget.id}`,
-	  paymentMethodId: data.payment_method_id || null,
-	  budgetId: Number(budgetId),
-	});
-  
-	if (data.type === "EXPENSE") {
-	  await this.budgetRepository.updateAmount(Number(budgetId), data.amount);
-	}
-  
-	return c.json(
-	  {
-		success: true,
-		data: BudgetApiAdapter.toApiResponse(budget),
-		message: "Transaction created and budget updated successfully",
-	  },
-	  HttpStatusCodes.CREATED
-	);
+		}
+	
+		// Validar que el usuario tiene acceso a este presupuesto
+		if (!(await this.budgetUtils.canAccess(Number(budgetId), Number(userId)))) {
+		return c.json(
+			{
+			success: false,
+			data: null,
+			message: "You don't have access to this budget",
+			},
+			HttpStatusCodes.BAD_REQUEST
+		);
+		}
+	
+		// Validar método de pago si se proporciona
+		if (data.payment_method_id) {
+		const paymentMethodValid = await this.budgetUtils.validatePaymentMethod(
+			data.payment_method_id,
+			Number(userId)
+		);
+		
+		if (!paymentMethodValid) {
+			return c.json(
+			{
+				success: false,
+				data: null,
+				message: "Invalid payment method",
+			},
+			HttpStatusCodes.BAD_REQUEST
+			);
+		}
+		}
+	
+		const categoryId = data.category_id || budget.categoryId;
+	
+		const transactionRepository = PgTransactionRepository.getInstance();
+		const transaction = await transactionRepository.create({
+			userId: Number(userId),
+			amount: data.amount,
+			type: data.type,
+			categoryId: categoryId,
+			description: data.description || `Transacción: ${budget.id}`,
+			paymentMethodId: data.payment_method_id || null,
+			budgetId: Number(budgetId),
+			category: budget.category || null,
+			paymentMethod: data.payment_method_id ? await this.paymentMethodRepository.findById(data.payment_method_id) : null,
+		});
+	
+		if (data.type === "EXPENSE") {
+			await this.budgetRepository.updateAmount(Number(budgetId), data.amount);
+		} else if (data.type === "INCOME") {
+			await this.budgetRepository.updateLimitAmount(Number(budgetId), (budget.limitAmount || 0) + data.amount);
+		}
+	
+		return c.json(
+		{
+			success: true,
+			data: BudgetApiAdapter.toApiResponse(budget),
+			message: "Transaction created and budget updated successfully",
+		},
+		HttpStatusCodes.CREATED
+		);
   });
 
   getTransactions = createHandler<GetTransactionsRoute>(async (c) => {

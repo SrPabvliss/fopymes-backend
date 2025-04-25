@@ -25,5 +25,4 @@ const router = createRouter()
 	.openapi(routes.updateProgress, goalService.updateProgress)
 	.openapi(routes.getTransactions, goalService.getTransactions);
 
-
 export default router;
