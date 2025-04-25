@@ -13,8 +13,11 @@ import auth from "@/auth/infrastructure/controllers/auth.controller";
 import categories from "@/categories/infrastructure/controllers/category.controller";
 import goalContributions from "@/goals/infrastucture/controllers/goal-contribution.controller";
 import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-contribution-schedule.controller";
+import notifications from "@/notifications/infrastructure/controllers/notification.controller";
 import DatabaseConnection from "@/db";
+import email from "@/email/infrastructure/controllers/email.controller";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
+import { startNotificationsCleanupJob } from "./core/infrastructure/cron/expired-notifications.cron";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
@@ -22,6 +25,7 @@ import { createMiddleware } from "hono/factory";
 const app = createApp();
 
 // startScheduledTransactionsJob();
+startNotificationsCleanupJob();
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
@@ -54,19 +58,21 @@ const logBodyMiddleware = createMiddleware(async (c, next) => {
 app.use(logBodyMiddleware);
 
 const routes = [
-	index,
-	auth,
-	users,
-	paymentMethods,
-	transactions,
-	goals,
-	budgets,
-	scheduledTransactions,
-	debts,
-	friends,
-	categories,
-	goalContributions,
-	goalContributionSchedules,
+  index,
+  auth,
+  users,
+  paymentMethods,
+  transactions,
+  goals,
+  budgets,
+  scheduledTransactions,
+  debts,
+  friends,
+  categories,
+  goalContributions,
+  goalContributionSchedules,
+  notifications,
+  email,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
