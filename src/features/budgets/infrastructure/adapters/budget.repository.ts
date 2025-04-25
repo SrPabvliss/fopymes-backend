@@ -237,14 +237,21 @@ export class PgBudgetRepository implements IBudgetRepository {
       })
       .from(budgets)
       .leftJoin(categories, eq(budgets.category_id, categories.id))
-      .where(
-        and(
-          gte(budgets.month, startDate),
-          lt(budgets.month, endDate)
-        )
-      );
+      .where(and(gte(budgets.month, startDate), lt(budgets.month, endDate)));
 
     return result.map(this.mapToEntity);
+  }
+
+  async updateLimitAmount(id: number, amount: number): Promise<IBudget> {
+    const result = await this.db
+      .update(budgets)
+      .set({
+        limit_amount: amount.toString(),
+      })
+      .where(eq(budgets.id, id))
+      .returning();
+
+    return this.mapToEntity(result[0]);
   }
 
   private mapToEntity(raw: any): IBudget {

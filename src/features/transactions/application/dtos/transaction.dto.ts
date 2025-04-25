@@ -3,7 +3,21 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const transactionBaseSchema = createInsertSchema(transactions);
-export const selectTransactionSchema = createSelectSchema(transactions);
+export const selectTransactionSchema = createSelectSchema(transactions).extend({
+	category: z.object({
+		id: z.number(),
+		name: z.string(),
+		description: z.string().nullable(),
+	}).nullable(),
+	payment_method: z.object({
+		id: z.number(),
+		name: z.string(),
+		type: z.string(),
+		last_four_digits: z.string().nullable(),
+		user_id: z.number(),
+	}).nullable(),
+	origin: z.enum(["DEBT", "GOAL", "BUDGET", "OTHER"]).nullable(),
+});
 
 export const createTransactionSchema = transactionBaseSchema
   .extend({
