@@ -108,35 +108,35 @@ export class TransactionService implements ITransactionService {
 	getFiltered = createHandler<FilterTransactionsRoute>(async (c) => {
 		const userId = c.req.param("userId");
 		const filters = c.req.valid("query");
-
+	
 		const userValidation = await this.transactionUtils.validateUser(
-			Number(userId)
+		Number(userId)
 		);
 		if (!userValidation.isValid) {
-			return c.json(
-				{
-					success: false,
-					data: null,
-					message: "User not found",
-				},
-				HttpStatusCodes.NOT_FOUND
-			);
-		}
-
-		const transactions = await this.transactionRepository.findByFilters(
-			Number(userId),
-			filters
-		);
-
 		return c.json(
 			{
-				success: true,
-				data: TransactionApiAdapter.toApiResponseList(transactions),
-				message: "Filtered transactions retrieved successfully",
+			success: false,
+			data: null,
+			message: "User not found",
 			},
-			HttpStatusCodes.OK
+			HttpStatusCodes.NOT_FOUND
 		);
-	});
+		}
+	
+		const transactions = await this.transactionRepository.findByFilters(
+		Number(userId),
+		filters
+		);
+	
+		return c.json(
+		{
+			success: true,
+			data: TransactionApiAdapter.toApiResponseList(transactions),
+			message: "Filtered transactions retrieved successfully",
+		},
+		HttpStatusCodes.OK
+		);
+  	});
 
 	create = createHandler<CreateRoute>(async (c) => {
 		const data = c.req.valid("json");
@@ -180,7 +180,7 @@ export class TransactionService implements ITransactionService {
 			userId: data.user_id,
 			amount: data.amount,
 			type: data.type,
-			categoryId: data.category_id || 0,
+			categoryId: data.category_id || null,
 			description: data.description,
 			paymentMethodId: data.payment_method_id,
 			scheduledTransactionId: data.scheduled_transaction_id,
@@ -215,7 +215,6 @@ export class TransactionService implements ITransactionService {
 			);
 		}
 
-		// Si se está actualizando el método de pago, validar que existe y pertenece al usuario
 		if (data.payment_method_id !== undefined) {
 			if (data.payment_method_id !== null) {
 				const paymentMethodValidation =
@@ -242,7 +241,7 @@ export class TransactionService implements ITransactionService {
 			{
 				amount: data.amount,
 				type: data.type,
-				categoryId: data.category_id || 0,
+				categoryId: data.category_id,
 				description: data.description,
 				paymentMethodId: data.payment_method_id,
 				scheduledTransactionId: data.scheduled_transaction_id,

@@ -9,9 +9,14 @@ export class BudgetApiAdapter {
 			user_id: budget.userId,
 			shared_user_id: budget.sharedUserId || null,
 			category_id: budget.categoryId,
-			limit_amount: budget.limitAmount.toString(),
-			current_amount: budget.currentAmount.toString(),
-			month: budget.month.toISOString(),
+			category: budget.category ? {
+				id: budget.category.id,
+				name: budget.category.name,
+				description: budget.category.description || null,
+			} : null,
+			limit_amount: Number(budget.limitAmount),
+			current_amount: Number(budget.currentAmount),
+			month: budget.month,
 		};
 	}
 

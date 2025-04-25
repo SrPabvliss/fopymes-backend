@@ -3,23 +3,31 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const debtBaseSchema = createInsertSchema(debts);
-export const selectDebtSchema = createSelectSchema(debts).transform((data) => ({
-	...data,
-	original_amount: Number(data.original_amount),
-	pending_amount: Number(data.pending_amount),
-}));
+export const selectDebtSchema = createSelectSchema(debts)
+	.extend({
+		category: z.object({
+			id: z.number(),
+			name: z.string(),
+			description: z.string().nullable(),
+		}).nullable(),
+	})
+	.transform((data) => ({
+		...data,
+		original_amount: Number(data.original_amount),
+		pending_amount: Number(data.pending_amount),
+	}));
 
 export const createDebtSchema = debtBaseSchema
 	.extend({
 		original_amount: z.number().positive("Amount must be positive"),
-		pending_amount: z.number().positive("Pending amount must be positive"),
 		due_date: z.coerce.date(),
 		paid: z.boolean().default(false),
 		creditor_id: z.number().optional(),
-		category_id: z.number().int().positive().optional(),
+		category_id: z.number().optional(),
 	})
 	.omit({
 		id: true,
+		pending_amount: true,
 	});
 
 export const updateDebtSchema = debtBaseSchema
@@ -31,7 +39,7 @@ export const updateDebtSchema = debtBaseSchema
 			.optional(),
 		due_date: z.coerce.date().optional(),
 		paid: z.boolean().optional(),
-		category_id: z.number().int().positive().optional(),
+		category_id: z.number().optional(),
 	})
 	.partial()
 	.omit({
@@ -43,4 +51,6 @@ export const updateDebtSchema = debtBaseSchema
 
 export const payDebtSchema = z.object({
 	amount: z.number().positive("Payment amount must be positive"),
-});
+	payment_method_id: z.number().optional(),
+	description: z.string().optional(),
+  });

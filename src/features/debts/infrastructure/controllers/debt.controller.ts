@@ -5,6 +5,7 @@ import { PgTransactionRepository } from "@/transactions/infrastructure/adapters/
 import { DebtUtilsService } from "@/debts/application/services/debt-utils.service";
 import { DebtService } from "@/debts/application/services/debt.service";
 import { PgDebtRepository } from "../adapters/debt.repository";
+import { PgPaymentMethodRepository } from "@/payment-methods/infrastructure/adapters/payment-method.repository";
 
 const userRepository = PgUserRepository.getInstance();
 const transactionRepository = PgTransactionRepository.getInstance();
@@ -16,10 +17,13 @@ const debtUtils = DebtUtilsService.getInstance(
 	transactionRepository
 );
 
+const paymentMethodRepository = PgPaymentMethodRepository.getInstance();
+
 const debtService = DebtService.getInstance(
 	debtRepository,
 	transactionRepository,
-	debtUtils
+	debtUtils,
+	paymentMethodRepository
 );
 
 const router = createRouter()
@@ -30,6 +34,7 @@ const router = createRouter()
 	.openapi(routes.create, debtService.create)
 	.openapi(routes.update, debtService.update)
 	.openapi(routes.delete_, debtService.delete)
-	.openapi(routes.payDebt, debtService.payDebt);
+	.openapi(routes.payDebt, debtService.payDebt)
+	.openapi(routes.getTransactions, debtService.getTransactions);
 
 export default router;

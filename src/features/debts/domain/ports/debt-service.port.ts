@@ -3,6 +3,7 @@ import {
 	CreateRoute,
 	DeleteRoute,
 	GetByIdRoute,
+	GetTransactionsRoute,
 	ListByCreditorRoute,
 	ListByUserRoute,
 	ListRoute,
@@ -19,4 +20,5 @@ export interface IDebtService {
 	update: AppRouteHandler<UpdateRoute>;
 	delete: AppRouteHandler<DeleteRoute>;
 	payDebt: AppRouteHandler<PayDebtRoute>;
+	getTransactions: AppRouteHandler<GetTransactionsRoute>;
 }

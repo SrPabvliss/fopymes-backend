@@ -1,4 +1,5 @@
 import { IGoalRepository } from "@/goals/domain/ports/goal-repository.port";
+import { PgPaymentMethodRepository } from "@/payment-methods/infrastructure/adapters/payment-method.repository";
 import { IUser } from "@/users/domain/entities/IUser";
 import { IUserRepository } from "@/users/domain/ports/user-repository.port";
 
@@ -126,5 +127,16 @@ export class GoalUtilsService {
 			isValid: true,
 			goal,
 		};
+	}
+
+	async validatePaymentMethod(paymentMethodId: number, userId: number): Promise<boolean> {
+		const paymentMethodRepository = PgPaymentMethodRepository.getInstance();
+		const paymentMethod = await paymentMethodRepository.findById(paymentMethodId);
+		
+		if (!paymentMethod) {
+			return false;
+		}
+		
+		return paymentMethod.userId === userId || paymentMethod.sharedUserId === userId;
 	}
 }

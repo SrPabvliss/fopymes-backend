@@ -2,13 +2,23 @@ import { goals } from "@/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
+const categorySchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	description: z.string().nullable(),
+});
+
 export const goalBaseSchema = createInsertSchema(goals);
-export const selectGoalSchema = createSelectSchema(goals).transform((data) => ({
-	...data,
-	target_amount: Number(data.target_amount),
-	current_amount: Number(data.current_amount),
-	contribution_amount: Number(data.contribution_amount),
-}));
+export const selectGoalSchema = createSelectSchema(goals)
+	.extend({
+		category: categorySchema.nullable(),
+	})
+	.transform((data) => ({
+		...data,
+		target_amount: Number(data.target_amount),
+		current_amount: Number(data.current_amount),
+		contribution_amount: Number(data.contribution_amount),
+	}));
 
 export const createGoalSchema = goalBaseSchema
 	.extend({

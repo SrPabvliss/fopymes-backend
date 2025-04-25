@@ -8,6 +8,7 @@ import {
 	updateDebtSchema,
 	payDebtSchema,
 } from "../../application/dtos/debt.dto";
+import { selectTransactionSchema } from "@/transactions/application/dtos/transaction.dto";
 
 const tags = ["Debts"];
 
@@ -268,6 +269,36 @@ export const payDebt = createRoute({
 	},
 });
 
+export const getTransactions = createRoute({
+	path: "/debts/:id/transactions",
+	method: "get",
+	tags,
+	request: {
+	  params: z.object({
+		id: z.string().regex(/^\d+$/).transform(Number),
+	  }),
+	},
+	responses: {
+	  [HttpStatusCodes.OK]: {
+		content: {
+		  "application/json": {
+			schema: baseResponseSchema(z.array(selectTransactionSchema)),
+		  },
+		},
+		description: "Debt transactions retrieved successfully",
+	  },
+	  [HttpStatusCodes.NOT_FOUND]: {
+		content: {
+		  "application/json": {
+			schema: errorResponseSchema,
+		  },
+		},
+		description: "Debt not found",
+	  },
+	},
+});
+  
+export type GetTransactionsRoute = typeof getTransactions;
 export type ListRoute = typeof list;
 export type GetByIdRoute = typeof getById;
 export type ListByUserRoute = typeof listByUser;
