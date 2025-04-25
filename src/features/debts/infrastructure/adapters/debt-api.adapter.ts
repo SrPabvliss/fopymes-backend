@@ -14,6 +14,11 @@ export class DebtApiAdapter {
 			paid: debt.paid,
 			creditor_id: debt.creditorId || null,
 			category_id: debt.categoryId || null,
+			category: debt.category ? {
+				id: debt.category.id,
+				name: debt.category.name,
+				description: debt.category.description || null,
+			} : null,
 		};
 	}
 
