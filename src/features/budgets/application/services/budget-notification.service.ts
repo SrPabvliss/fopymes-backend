@@ -1,7 +1,8 @@
-import { NotificationUtilsService } from '@/notifications/application/services/notification-utils.service';
-import { PgNotificationRepository } from '@/notifications/infrastructure/adapters/notification.repository';
-import { IBudget } from '../../domain/entities/IBudget';
-import { PgCategoryRepository } from '@/categories/infrastructure/adapters/category.repository';
+import { NotificationUtilsService } from "@/notifications/application/services/notification-utils.service";
+import { PgNotificationRepository } from "@/notifications/infrastructure/adapters/notification.repository";
+import { IBudget } from "../../domain/entities/IBudget";
+import { PgCategoryRepository } from "@/categories/infrastructure/adapters/category.repository";
+import { NotificationType } from "@/notifications/domain/entities/INotification";
 
 /**
  * Service for handling budget-related notifications
@@ -10,13 +11,15 @@ export class BudgetNotificationService {
   private static instance: BudgetNotificationService;
   private notificationUtils: NotificationUtilsService;
   private categoryRepository: PgCategoryRepository;
-  
+
   // Cache to prevent duplicate notifications
   private notificationCache: Map<string, Date> = new Map();
 
   private constructor() {
     const notificationRepository = PgNotificationRepository.getInstance();
-    this.notificationUtils = NotificationUtilsService.getInstance(notificationRepository);
+    this.notificationUtils = NotificationUtilsService.getInstance(
+      notificationRepository
+    );
     this.categoryRepository = PgCategoryRepository.getInstance();
   }
 
@@ -32,17 +35,27 @@ export class BudgetNotificationService {
    * @param budget The budget to check
    * @param previousAmount Previous amount before update
    */
-  async checkBudgetLimits(budget: IBudget, previousAmount: number): Promise<void> {
-    const previousPercentage = Math.floor((previousAmount / budget.limitAmount) * 100);
-    const currentPercentage = Math.floor((budget.currentAmount / budget.limitAmount) * 100);
-    
+  async checkBudgetLimits(
+    budget: IBudget,
+    previousAmount: number
+  ): Promise<void> {
+    const previousPercentage = Math.floor(
+      (previousAmount / budget.limitAmount) * 100
+    );
+    const currentPercentage = Math.floor(
+      (budget.currentAmount / budget.limitAmount) * 100
+    );
+
     // Get category name
     const category = await this.categoryRepository.findById(budget.categoryId);
-    const categoryName = category ? category.name : 'Categoría sin nombre';
+    const categoryName = category ? category.name : "Categoría sin nombre";
 
     // Check for budget threshold notifications
-    if (currentPercentage >= 80 && previousPercentage < 80 && 
-        !this.hasRecentNotification(budget.userId, 'BUDGET_80', budget.id)) {
+    if (
+      currentPercentage >= 80 &&
+      previousPercentage < 80 &&
+      !this.hasRecentNotification(budget.userId, "BUDGET_80", budget.id)
+    ) {
       await this.notificationUtils.createWarningNotification(
         budget.userId,
         `Presupuesto al 80%: ${categoryName}`,
@@ -50,8 +63,8 @@ export class BudgetNotificationService {
         `Has alcanzado el 80% de tu presupuesto para ${categoryName} este mes. Considera revisar tus gastos para no exceder el límite.`,
         true // Send email
       );
-      this.storeNotificationSent(budget.userId, 'BUDGET_80', budget.id);
-      
+      this.storeNotificationSent(budget.userId, "BUDGET_80", budget.id);
+
       // Notify shared user if applicable
       if (budget.sharedUserId) {
         await this.notificationUtils.createWarningNotification(
@@ -62,9 +75,11 @@ export class BudgetNotificationService {
           true // Send email
         );
       }
-    } 
-    else if (currentPercentage >= 90 && previousPercentage < 90 && 
-             !this.hasRecentNotification(budget.userId, 'BUDGET_90', budget.id)) {
+    } else if (
+      currentPercentage >= 90 &&
+      previousPercentage < 90 &&
+      !this.hasRecentNotification(budget.userId, "BUDGET_90", budget.id)
+    ) {
       await this.notificationUtils.createWarningNotification(
         budget.userId,
         `Presupuesto al 90%: ${categoryName}`,
@@ -72,8 +87,8 @@ export class BudgetNotificationService {
         `¡Atención! Has alcanzado el 90% de tu presupuesto para ${categoryName} este mes. Te queda muy poco margen antes de exceder el límite.`,
         true // Send email
       );
-      this.storeNotificationSent(budget.userId, 'BUDGET_90', budget.id);
-      
+      this.storeNotificationSent(budget.userId, "BUDGET_90", budget.id);
+
       // Notify shared user if applicable
       if (budget.sharedUserId) {
         await this.notificationUtils.createWarningNotification(
@@ -84,9 +99,11 @@ export class BudgetNotificationService {
           true // Send email
         );
       }
-    } 
-    else if (currentPercentage >= 100 && previousPercentage < 100 && 
-             !this.hasRecentNotification(budget.userId, 'BUDGET_100', budget.id)) {
+    } else if (
+      currentPercentage >= 100 &&
+      previousPercentage < 100 &&
+      !this.hasRecentNotification(budget.userId, "BUDGET_100", budget.id)
+    ) {
       await this.notificationUtils.createWarningNotification(
         budget.userId,
         `Presupuesto excedido: ${categoryName}`,
@@ -94,8 +111,8 @@ export class BudgetNotificationService {
         `Has excedido tu presupuesto para ${categoryName} este mes. Considera ajustar tus gastos en esta categoría o revisar el límite establecido para el próximo mes.`,
         true // Send email
       );
-      this.storeNotificationSent(budget.userId, 'BUDGET_100', budget.id);
-      
+      this.storeNotificationSent(budget.userId, "BUDGET_100", budget.id);
+
       // Notify shared user if applicable
       if (budget.sharedUserId) {
         await this.notificationUtils.createWarningNotification(
@@ -114,11 +131,14 @@ export class BudgetNotificationService {
    * @param budget The budget being shared
    * @param sharedUserId The user ID with whom the budget is shared
    */
-  async notifyBudgetShared(budget: IBudget, sharedUserId: number): Promise<void> {
+  async notifyBudgetShared(
+    budget: IBudget,
+    sharedUserId: number
+  ): Promise<void> {
     // Get category name
     const category = await this.categoryRepository.findById(budget.categoryId);
-    const categoryName = category ? category.name : 'Categoría sin nombre';
-    
+    const categoryName = category ? category.name : "Categoría sin nombre";
+
     // Format month for display
     const month = new Date(budget.month);
     const monthName = this.getMonthName(month.getMonth());
@@ -130,9 +150,9 @@ export class BudgetNotificationService {
       `Nuevo presupuesto compartido`,
       `${categoryName} - ${monthName} ${year}`,
       `Se ha compartido contigo un presupuesto para la categoría "${categoryName}" con un límite de ${budget.limitAmount} para ${monthName} de ${year}.`,
-      'SUGGESTION',
+      NotificationType.SUGGESTION,
       null, // No expiration
-      true  // Send email
+      true // Send email
     );
   }
 
@@ -143,12 +163,17 @@ export class BudgetNotificationService {
    * @param entityId ID of the related entity (budget)
    * @returns Boolean indicating if a notification was sent recently
    */
-  private hasRecentNotification(userId: number, type: string, entityId: number): boolean {
+  private hasRecentNotification(
+    userId: number,
+    type: string,
+    entityId: number
+  ): boolean {
     const key = `${userId}_${type}_${entityId}`;
     const lastSent = this.notificationCache.get(key);
     if (!lastSent) return false;
-    
-    const hoursSinceLastNotification = (Date.now() - lastSent.getTime()) / (1000 * 60 * 60);
+
+    const hoursSinceLastNotification =
+      (Date.now() - lastSent.getTime()) / (1000 * 60 * 60);
     return hoursSinceLastNotification < 24; // Don't send more than once per day
   }
 
@@ -158,7 +183,11 @@ export class BudgetNotificationService {
    * @param type Notification type identifier
    * @param entityId ID of the related entity (budget)
    */
-  private storeNotificationSent(userId: number, type: string, entityId: number): void {
+  private storeNotificationSent(
+    userId: number,
+    type: string,
+    entityId: number
+  ): void {
     const key = `${userId}_${type}_${entityId}`;
     this.notificationCache.set(key, new Date());
   }
@@ -170,8 +199,18 @@ export class BudgetNotificationService {
    */
   private getMonthName(monthIndex: number): string {
     const months = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre",
     ];
     return months[monthIndex];
   }
