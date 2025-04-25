@@ -17,4 +17,6 @@ export interface ITransaction {
 	contributionId?: number | null;
 	budgetId?: number | null;
 	origin?: "DEBT" | "GOAL" | "BUDGET" | "OTHER" | null;
+	createdAt: Date;
+	updatedAt: Date;
 }

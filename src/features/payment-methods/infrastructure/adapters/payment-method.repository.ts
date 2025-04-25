@@ -101,6 +101,8 @@ export class PgPaymentMethodRepository implements IPaymentMethodRepository {
 			name: raw.name,
 			type: raw.type,
 			lastFourDigits: raw.last_four_digits,
+			createdAt: raw.created_at,
+			updatedAt: raw.updated_at,
 		};
 	}
 }

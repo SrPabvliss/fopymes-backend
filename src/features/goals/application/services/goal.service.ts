@@ -173,16 +173,18 @@ export class GoalService implements IGoalService {
       }
     }
 
-    const goal = await this.goalRepository.create({
-      userId: data.user_id,
-      sharedUserId: data.shared_user_id || null,
-      name: data.name,
-      targetAmount: Number(data.target_amount),
-      currentAmount: Number(data.current_amount || 0),
-      endDate: new Date(data.end_date),
-      contributionFrequency: data.contribution_frequency || 0,
-      contributionAmount: data.contribution_amount || 0,
-    });
+		const goal = await this.goalRepository.create({
+			userId: data.user_id,
+			sharedUserId: data.shared_user_id || null,
+			name: data.name,
+			targetAmount: Number(data.target_amount),
+			currentAmount: Number(data.current_amount || 0),
+			endDate: new Date(data.end_date),
+			contributionFrequency: data.contribution_frequency || 0,
+			contributionAmount: data.contribution_amount || 0,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
 
     const scheduleGenerator = GoalScheduleGeneratorService.getInstance(
       PgGoalContributionScheduleRepository.getInstance()

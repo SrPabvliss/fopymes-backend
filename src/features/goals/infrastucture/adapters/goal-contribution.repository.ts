@@ -1,8 +1,9 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and, gte, lte } from "drizzle-orm";
 import DatabaseConnection from "@/core/infrastructure/database";
 import { goal_contributions } from "@/schema";
 import { IGoalContributionRepository } from "@/goals/domain/ports/goal-contribution-repository.port";
 import { IGoalContribution } from "@/goals/domain/entities/IGoalContribution";
+import { ReportFilters } from "../../../reports/domain/entities/report.entity";
 
 export class PgGoalContributionRepository
   implements IGoalContributionRepository
@@ -89,6 +90,34 @@ export class PgGoalContributionRepository
     return result[0] ? this.mapToEntity(result[0]) : null;
   }
 
+  async findByFilters(filters: ReportFilters): Promise<IGoalContribution[]> {
+    const conditions = [];
+
+    if (filters.userId) {
+      conditions.push(eq(goal_contributions.user_id, Number(filters.userId)));
+    }
+
+    if (filters.goalId) {
+      conditions.push(eq(goal_contributions.goal_id, Number(filters.goalId)));
+    }
+
+    if (filters.startDate) {
+      conditions.push(gte(goal_contributions.date, filters.startDate));
+    }
+
+    if (filters.endDate) {
+      conditions.push(lte(goal_contributions.date, filters.endDate));
+    }
+
+    const result = await this.db
+      .select()
+      .from(goal_contributions)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(goal_contributions.date));
+
+    return result.map(this.mapToEntity);
+  }
+
   private mapToEntity(raw: any): IGoalContribution {
     return {
       id: raw.id,
@@ -96,6 +125,7 @@ export class PgGoalContributionRepository
       userId: raw.user_id,
       amount: Number(raw.amount),
       date: raw.date,
+      transactionId: raw.transaction_id,
     };
   }
 }

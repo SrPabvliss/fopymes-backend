@@ -175,16 +175,18 @@ export class DebtService implements IDebtService {
       }
     }
 
-    const debt = await this.debtRepository.create({
-      userId: data.user_id,
-      description: data.description,
-      originalAmount: Number(data.original_amount),
-      pendingAmount: Number(data.original_amount),
-      dueDate: new Date(data.due_date),
-      paid: false,
-      creditorId: data.creditor_id || null,
-      categoryId: data.category_id || null,
-    });
+		const debt = await this.debtRepository.create({
+			userId: data.user_id,
+			description: data.description,
+			originalAmount: Number(data.original_amount),
+			pendingAmount: Number(data.original_amount),
+			dueDate: new Date(data.due_date),
+			paid: false,
+			creditorId: data.creditor_id || null,
+			categoryId: data.category_id || null,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
 
     // Send notification for newly created debt
     try {
@@ -202,6 +204,7 @@ export class DebtService implements IDebtService {
       HttpStatusCodes.CREATED
     );
   });
+  
   update = createHandler<UpdateRoute>(async (c) => {
     const id = c.req.param("id");
     const data = c.req.valid("json");
@@ -274,32 +277,6 @@ export class DebtService implements IDebtService {
     );
   });
 
-  delete = createHandler<DeleteRoute>(async (c) => {
-    const id = c.req.param("id");
-    const debt = await this.debtRepository.findById(Number(id));
-
-    if (!debt) {
-      return c.json(
-        {
-          success: false,
-          data: null,
-          message: "Debt not found",
-        },
-        HttpStatusCodes.NOT_FOUND
-      );
-    }
-
-    const deleted = await this.debtRepository.delete(Number(id));
-    return c.json(
-      {
-        success: true,
-        data: { deleted },
-        message: "Debt deleted successfully",
-      },
-      HttpStatusCodes.OK
-    );
-  });
-
   payDebt = createHandler<PayDebtRoute>(async (c) => {
     const id = c.req.param("id");
     const userId = c.req.param("userId");
@@ -329,7 +306,7 @@ export class DebtService implements IDebtService {
         payment_method_id,
         Number(userId)
       );
-
+      
       if (!paymentMethodValid) {
         return c.json(
           {
@@ -350,10 +327,10 @@ export class DebtService implements IDebtService {
       category: debt.category ?? null,
       description: description || `Pago de deuda: ${debt.description}`,
       paymentMethodId: payment_method_id || null,
-      paymentMethod: payment_method_id
-        ? await this.paymentMethodRepository.findById(payment_method_id)
-        : null,
+      paymentMethod: payment_method_id ? await this.paymentMethodRepository.findById(payment_method_id) : null,
       debtId: debt.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     const updatedDebt = await this.debtRepository.updatePendingAmount(
@@ -366,7 +343,7 @@ export class DebtService implements IDebtService {
         success: true,
         data: {
           ...DebtApiAdapter.toApiResponse(updatedDebt),
-          transaction: TransactionApiAdapter.toApiResponse(transaction),
+          transaction: TransactionApiAdapter.toApiResponse(transaction)
         },
         message: "Debt payment processed successfully",
       },
@@ -389,7 +366,6 @@ export class DebtService implements IDebtService {
       );
     }
 
-    // Find all transactions associated with this debt
     const transactions = await this.transactionRepository.findByFilters(
       debt.userId,
       { debt_id: debt.id }
@@ -400,6 +376,32 @@ export class DebtService implements IDebtService {
         success: true,
         data: TransactionApiAdapter.toApiResponseList(transactions),
         message: "Debt transactions retrieved successfully",
+      },
+      HttpStatusCodes.OK
+    );
+  });
+
+  delete = createHandler<DeleteRoute>(async (c) => {
+    const id = c.req.param("id");
+    const debt = await this.debtRepository.findById(Number(id));
+
+    if (!debt) {
+      return c.json(
+        {
+          success: false,
+          data: null,
+          message: "Debt not found",
+        },
+        HttpStatusCodes.NOT_FOUND
+      );
+    }
+
+    const deleted = await this.debtRepository.delete(Number(id));
+    return c.json(
+      {
+        success: true,
+        data: { deleted },
+        message: "Debt deleted successfully",
       },
       HttpStatusCodes.OK
     );

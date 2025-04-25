@@ -219,6 +219,20 @@ export class PgBudgetRepository implements IBudgetRepository {
     return this.mapToEntity(result[0]);
   }
 
+	private mapToEntity(raw: any): IBudget {
+		return {
+			id: raw.id,
+			userId: raw.user_id,
+			sharedUserId: raw.shared_user_id,
+			categoryId: raw.category_id,
+			category: raw.category || null,
+			limitAmount: Number(raw.limit_amount),
+			currentAmount: Number(raw.current_amount),
+			month: new Date(raw.month),
+			createdAt: raw.created_at,
+			updatedAt: raw.updated_at,
+		};
+	}
   async findByDateRange(startDate: Date, endDate: Date): Promise<IBudget[]> {
     const result = await this.db
       .select({
@@ -254,16 +268,4 @@ export class PgBudgetRepository implements IBudgetRepository {
     return this.mapToEntity(result[0]);
   }
 
-  private mapToEntity(raw: any): IBudget {
-    return {
-      id: raw.id,
-      userId: raw.user_id,
-      sharedUserId: raw.shared_user_id,
-      categoryId: raw.category_id,
-      category: raw.category || null,
-      limitAmount: Number(raw.limit_amount),
-      currentAmount: Number(raw.current_amount),
-      month: new Date(raw.month),
-    };
-  }
 }

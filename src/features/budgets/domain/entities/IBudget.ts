@@ -9,5 +9,7 @@ export interface IBudget {
 	limitAmount: number;
 	currentAmount: number;
 	month: Date;
+	createdAt: Date;
+	updatedAt: Date;
 }
 

@@ -8,8 +8,10 @@ export interface IGoal {
 	targetAmount: number;
 	currentAmount: number;
 	endDate: Date;
-	contributionFrequency: number;
-	contributionAmount: number;
 	categoryId?: number | null;
 	category?: ICategory | null;
+	contributionFrequency?: number | null;
+	contributionAmount?: number | null;
+	createdAt: Date;
+	updatedAt: Date;
 }

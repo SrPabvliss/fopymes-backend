@@ -4,7 +4,16 @@ import { z } from "zod";
 import { NotificationType } from "../../domain/entities/INotification";
 
 export const notificationBaseSchema = createInsertSchema(notifications);
-export const selectNotificationSchema = createSelectSchema(notifications);
+export const selectNotificationSchema = createSelectSchema(notifications)
+  .extend({
+    created_at: z.date(),
+    updated_at: z.date(),
+  })
+  .transform((data) => ({
+    ...data,
+    created_at: new Date(data.created_at),
+    updated_at: new Date(data.updated_at),
+  }));
 
 export const notificationTypeSchema = z.enum([
   NotificationType.GOAL,

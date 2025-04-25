@@ -17,6 +17,8 @@ export const selectTransactionSchema = createSelectSchema(transactions).extend({
 		user_id: z.number(),
 	}).nullable(),
 	origin: z.enum(["DEBT", "GOAL", "BUDGET", "OTHER"]).nullable(),
+	created_at: z.date(),
+	updated_at: z.date(),
 });
 
 export const createTransactionSchema = transactionBaseSchema

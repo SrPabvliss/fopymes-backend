@@ -10,11 +10,20 @@ export const selectDebtSchema = createSelectSchema(debts)
 			name: z.string(),
 			description: z.string().nullable(),
 		}).nullable(),
+		creditor: z.object({
+			id: z.number(),
+			name: z.string(),
+			email: z.string(),
+		}).nullable(),
+		created_at: z.date(),
+		updated_at: z.date(),
 	})
 	.transform((data) => ({
 		...data,
 		original_amount: Number(data.original_amount),
 		pending_amount: Number(data.pending_amount),
+		created_at: new Date(data.created_at),
+		updated_at: new Date(data.updated_at),
 	}));
 
 export const createDebtSchema = debtBaseSchema
