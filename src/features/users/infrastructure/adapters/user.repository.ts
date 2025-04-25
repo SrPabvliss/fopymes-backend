@@ -22,6 +22,14 @@ export class PgUserRepository implements IUserRepository {
 		return result.map((raw) => this.mapToEntity(raw));
 	}
 
+	async findAllActive(): Promise<IUser[]> {
+		const result = await this.db
+			.select()
+			.from(users)
+			.where(eq(users.active, true));
+		return result.map((raw) => this.mapToEntity(raw));
+	}
+
 	async findById(id: number): Promise<IUser | null> {
 		const result = await this.db.select().from(users).where(eq(users.id, id));
 		return result[0] ? this.mapToEntity(result[0]) : null;

@@ -9,60 +9,60 @@ import { ScheduledTransactionService } from "@/scheduled-transactions/applicatio
 let isRunning = false;
 
 export function startScheduledTransactionsJob() {
-	const userRepository = PgUserRepository.getInstance();
-	const paymentMethodRepository = PgPaymentMethodRepository.getInstance();
-	const transactionRepository = PgTransactionRepository.getInstance();
-	const scheduledTransactionRepository =
-		PgScheduledTransactionRepository.getInstance();
+  const userRepository = PgUserRepository.getInstance();
+  const paymentMethodRepository = PgPaymentMethodRepository.getInstance();
+  const transactionRepository = PgTransactionRepository.getInstance();
+  const scheduledTransactionRepository =
+    PgScheduledTransactionRepository.getInstance();
 
-	const scheduledTransactionUtils =
-		ScheduledTransactionUtilsService.getInstance(
-			scheduledTransactionRepository,
-			userRepository,
-			paymentMethodRepository,
-			transactionRepository
-		);
+  const scheduledTransactionUtils =
+    ScheduledTransactionUtilsService.getInstance(
+      scheduledTransactionRepository,
+      userRepository,
+      paymentMethodRepository,
+      transactionRepository
+    );
 
-	const scheduledTransactionService = ScheduledTransactionService.getInstance(
-		scheduledTransactionRepository,
-		transactionRepository,
-		scheduledTransactionUtils
-	);
+  const scheduledTransactionService = ScheduledTransactionService.getInstance(
+    scheduledTransactionRepository,
+    transactionRepository,
+    scheduledTransactionUtils
+  );
 
-	async function checkScheduledTransactions() {
-		if (isRunning) return;
-		isRunning = true;
+  async function checkScheduledTransactions() {
+    if (isRunning) return;
+    isRunning = true;
 
-		console.log("Checking scheduled transactions");
+    console.log("Checking scheduled transactions");
 
-		try {
-			const scheduledTransactions =
-				await scheduledTransactionRepository.findPendingExecutions();
+    try {
+      const scheduledTransactions =
+        await scheduledTransactionRepository.findPendingExecutions();
 
-			for (const scheduled of scheduledTransactions) {
-				try {
-					await scheduledTransactionService.executeScheduledTransaction(
-						scheduled
-					);
-					console.info(`Executed scheduled transaction ${scheduled.id}`);
-				} catch (error) {
-					console.error(
-						`Error executing scheduled transaction ${scheduled.id}:`,
-						error
-					);
-				}
-			}
-		} catch (error) {
-			console.error("Error checking scheduled transactions:", error);
-		} finally {
-			isRunning = false;
-		}
-	}
+      for (const scheduled of scheduledTransactions) {
+        try {
+          await scheduledTransactionService.executeScheduledTransaction(
+            scheduled
+          );
+          console.info(`Executed scheduled transaction ${scheduled.id}`);
+        } catch (error) {
+          console.error(
+            `Error executing scheduled transaction ${scheduled.id}:`,
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error checking scheduled transactions:", error);
+    } finally {
+      isRunning = false;
+    }
+  }
 
-	const intervalMs = env.SCHEDULED_TRANSACTIONS_CHECK_INTERVAL * 1000;
+  const intervalMs = env.SCHEDULED_TRANSACTIONS_CHECK_INTERVAL * 1000;
 
-	setInterval(checkScheduledTransactions, intervalMs);
-	console.info(
-		`Started scheduled transactions job (interval: ${env.SCHEDULED_TRANSACTIONS_CHECK_INTERVAL}s)`
-	);
+  setInterval(checkScheduledTransactions, intervalMs);
+  console.info(
+    `Started scheduled transactions job (interval: ${env.SCHEDULED_TRANSACTIONS_CHECK_INTERVAL}s)`
+  );
 }

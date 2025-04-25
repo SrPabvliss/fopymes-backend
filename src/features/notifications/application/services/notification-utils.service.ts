@@ -1,16 +1,19 @@
 import { INotification, NotificationType } from "../../domain/entities/INotification";
 import { INotificationRepository } from "../../domain/ports/notification-repository.port";
 import { NotificationEmailService } from "./notification-email.service";
+import { NotificationSocketService } from "../../infrastructure/websocket/notification-socket.service";
 
 export class NotificationUtilsService {
   private static instance: NotificationUtilsService;
 
   private notificationEmailService: NotificationEmailService;
+  private notificationSocketService: NotificationSocketService;
 
   constructor(
     private readonly notificationRepository: INotificationRepository
   ) {
     this.notificationEmailService = NotificationEmailService.getInstance();
+    this.notificationSocketService = NotificationSocketService.getInstance();
   }
 
   public static getInstance(
@@ -50,6 +53,13 @@ export class NotificationUtilsService {
       } catch (error) {
         console.error('Error sending notification email:', error);
       }
+    }
+    
+    // Broadcast notification via WebSocket
+    try {
+      this.notificationSocketService.broadcastNotification(userId, notification);
+    } catch (error) {
+      console.error('Error broadcasting notification via WebSocket:', error);
     }
     
     return notification;
