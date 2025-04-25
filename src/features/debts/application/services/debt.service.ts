@@ -7,6 +7,7 @@ import {
 	CreateRoute,
 	DeleteRoute,
 	GetByIdRoute,
+	GetTransactionsRoute,
 	ListByCreditorRoute,
 	ListByUserRoute,
 	ListRoute,
@@ -320,6 +321,33 @@ export class DebtService implements IDebtService {
 		  transaction: TransactionApiAdapter.toApiResponse(transaction)
 		},
 		message: "Debt payment processed successfully",
+	  },
+	  HttpStatusCodes.OK
+	);
+  });
+
+  getTransactions = createHandler<GetTransactionsRoute>(async (c) => {
+	const id = c.req.param("id");
+	
+	const debt = await this.debtRepository.findById(Number(id));
+	if (!debt) {
+	  return c.json(
+		{
+		  success: false,
+		  data: null,
+		  message: "Debt not found",
+		},
+		HttpStatusCodes.NOT_FOUND
+	  );
+	}
+	
+	const transactions = await this.transactionRepository.findByDebtId(Number(id));
+	
+	return c.json(
+	  {
+		success: true,
+		data: TransactionApiAdapter.toApiResponseList(transactions),
+		message: "Debt transactions retrieved successfully",
 	  },
 	  HttpStatusCodes.OK
 	);
