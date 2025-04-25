@@ -9,6 +9,7 @@ import {
   text,
   date,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -71,7 +72,9 @@ export const transactions = pgTable(
       .notNull(),
     scheduled_transaction_id: integer("scheduled_transaction_id"),
     debt_id: integer("debt_id").references(() => debts.id),
-    contribution_id: integer("contribution_id").references(() => goal_contributions.id),
+    contribution_id: integer("contribution_id").references(
+      () => goal_contributions.id
+    ),
     budget_id: integer("budget_id").references(() => budgets.id),
   },
   (table) => {
@@ -296,3 +299,15 @@ export const notifications = pgTable(
     };
   }
 );
+
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id),
+  type: varchar("type").notNull(),
+  format: varchar("format").notNull(),
+  data: jsonb("data").notNull(),
+  created_at: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  expires_at: timestamp("expires_at").notNull(),
+});
