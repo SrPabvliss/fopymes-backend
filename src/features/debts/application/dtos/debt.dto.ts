@@ -51,4 +51,6 @@ export const updateDebtSchema = debtBaseSchema
 
 export const payDebtSchema = z.object({
 	amount: z.number().positive("Payment amount must be positive"),
-});
+	payment_method_id: z.number().optional(),
+	description: z.string().optional(),
+  });

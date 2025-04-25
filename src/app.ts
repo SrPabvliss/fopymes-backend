@@ -26,11 +26,13 @@ import { startFinancialSuggestionsJob } from "./core/infrastructure/cron/financi
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
+import { recalculateContributionAmountCron } from "./core/infrastructure/cron/recalculate-contribution-amount.cron";
 
 const app = createApp();
 
 // startScheduledTransactionsJob();
 startNotificationsCleanupJob();
+recalculateContributionAmountCron.start();
 startDebtNotificationsJob();
 startBudgetSummaryJob();
 startGoalNotificationsJob();

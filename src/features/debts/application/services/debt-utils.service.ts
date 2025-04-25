@@ -3,6 +3,7 @@ import { IDebtRepository } from "@/debts/domain/ports/debt-repository.port";
 import { ITransactionRepository } from "@/transactions/domain/ports/transaction-repository.port";
 import { IUser } from "@/users/domain/entities/IUser";
 import { IUserRepository } from "@/users/domain/ports/user-repository.port";
+import { PgPaymentMethodRepository } from "@/payment-methods/infrastructure/adapters/payment-method.repository";
 
 export class DebtUtilsService {
 	private static instance: DebtUtilsService;
@@ -91,5 +92,16 @@ export class DebtUtilsService {
 		if (!debt) return false;
 
 		return debt.userId === userId || debt.creditorId === userId;
+	}
+
+	async validatePaymentMethod(paymentMethodId: number, userId: number): Promise<boolean> {
+		const paymentMethodRepository = PgPaymentMethodRepository.getInstance();
+		const paymentMethod = await paymentMethodRepository.findById(paymentMethodId);
+		
+		if (!paymentMethod) {
+			return false;
+		}
+		
+		return paymentMethod.userId === userId || paymentMethod.sharedUserId === userId;
 	}
 }

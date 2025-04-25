@@ -8,6 +8,7 @@ import {
 	ListSharedRoute,
 	UpdateProgressRoute,
 	UpdateRoute,
+	GetTransactionsRoute,
 } from "@/goals/infrastucture/controllers/goal.routes";
 
 export interface IGoalService {
@@ -19,4 +20,5 @@ export interface IGoalService {
 	update: AppRouteHandler<UpdateRoute>;
 	delete: AppRouteHandler<DeleteRoute>;
 	updateProgress: AppRouteHandler<UpdateProgressRoute>;
+	getTransactions: AppRouteHandler<GetTransactionsRoute>;
 }

@@ -10,4 +10,5 @@ export interface ITransaction {
 	scheduledTransactionId?: number | null;
 	debtId?: number | null;
 	contributionId?: number | null;
+	budgetId?: number | null;
 }
