@@ -154,16 +154,20 @@ export class ReportServiceImpl implements ReportService {
       };
     }
 
+    let inProgressGoals = 0;
+    let expiredGoals = 0;
+    let completedGoals = 0;
+
     const report: GoalStatusReport = {
-      completed: 0,
-      expired: 0,
-      inProgress: 0,
+      completed: completedGoals,
+      expired: expiredGoals,
+      inProgress: inProgressGoals,
       total: goals.length,
       goals: goals.map((goal: IGoal) => {
         const status = this.determineGoalStatus(goal, now);
-        if (status === "completed") report.completed++;
-        else if (status === "expired") report.expired++;
-        else report.inProgress++;
+        if (status === "completed") completedGoals++;
+        else if (status === "expired") expiredGoals++;
+        else inProgressGoals++;
 
         return {
           id: goal.id?.toString() || "",
@@ -177,7 +181,12 @@ export class ReportServiceImpl implements ReportService {
       }),
     };
 
-    return report;
+    return {
+      ...report,
+      completed: completedGoals,
+      expired: expiredGoals,
+      inProgress: inProgressGoals,
+    };
   }
 
   private async generateGoalsByCategoryReport(
