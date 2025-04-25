@@ -21,6 +21,7 @@ export const createNotificationSchema = notificationBaseSchema
     message: z.string().min(1, "Message is required"),
     type: notificationTypeSchema,
     expires_at: z.coerce.date().optional().nullable(),
+    send_email: z.boolean().optional().default(true),
   })
   .omit({
     id: true,

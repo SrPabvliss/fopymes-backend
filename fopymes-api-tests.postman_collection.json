@@ -8,7 +8,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000/api",
+      "value": "http://localhost:3005",
       "type": "string"
     },
     {
@@ -1333,6 +1333,62 @@
               "path": ["notifications", "{{notificationId}}"]
             },
             "description": "Delete a notification"
+          }
+        },
+        {
+          "name": "Send Email Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Success is true\", function () {",
+                  "    pm.expect(response.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains notification data\", function () {",
+                  "    pm.expect(response.data).to.be.an('object');",
+                  "    pm.expect(response.data.title).to.eql(\"Email Notification Test\");",
+                  "    pm.expect(response.data.type).to.eql(\"INFO\");",
+                  "    pm.expect(response.data.read).to.be.false;",
+                  "});",
+                  "",
+                  "if (response.data && response.data.id) {",
+                  "    pm.globals.set(\"emailNotificationId\", response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_id\": 1,\n    \"title\": \"Email Notification Test\",\n    \"subtitle\": \"Testing email notifications\",\n    \"message\": \"This is a test notification that will be sent via email. It contains important information about your account.\",\n    \"type\": \"INFO\",\n    \"send_email\": true,\n    \"expires_at\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            },
+            "description": "Create a notification and send it via email"
           }
         }
       ],
