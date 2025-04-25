@@ -1,5 +1,8 @@
 import { Report, ReportType } from "../../domain/entities/report.entity";
 import PDFDocument from "pdfkit";
+import path from "path";
+import fs from "fs/promises";
+import { PDFDocument as PDFLib, rgb, StandardFonts } from "pdf-lib";
 
 export class PDFService {
   private readonly HEADER_HEIGHT = 50;
@@ -17,6 +20,12 @@ export class PDFService {
   private readonly SECTION_SPACING = 20;
 
   async generatePDF(report: Report): Promise<Buffer> {
+    // Si es un reporte de tipo GOAL, usamos el template
+    if (report.type === ReportType.GOAL) {
+      return this.generateGoalPDF(report);
+    }
+
+    // Para otros tipos de reportes, generamos dinámicamente
     const doc = new PDFDocument({
       size: "A4",
       margin: 50,
@@ -70,6 +79,94 @@ export class PDFService {
       this.addFooter(doc);
       doc.end();
     });
+  }
+
+  private async generateGoalPDF(report: Report): Promise<Buffer> {
+    try {
+      // Cargar el template PDF
+      const templatePath = path.join(
+        __dirname,
+        "../../domain/templates/goals.pdf"
+      );
+      const existingPdfBytes = await fs.readFile(templatePath);
+      const pdfDoc = await PDFLib.load(new Uint8Array(existingPdfBytes));
+
+      // Obtener la primera página
+      const page = pdfDoc.getPages()[0];
+      const { width, height } = page.getSize();
+
+      // Añadir el contenido al template
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+      // Configurar el contenido
+      page.drawText(`Meta: ${report.data.name}`, {
+        x: 50,
+        y: height - 150,
+        size: 16,
+        font: helveticaFont,
+        color: rgb(0.17, 0.24, 0.31), // PRIMARY_COLOR en RGB
+      });
+
+      // Añadir más información de la meta
+      const yPositions = {
+        targetAmount: height - 180,
+        currentAmount: height - 210,
+        progress: height - 240,
+        endDate: height - 270,
+      };
+
+      page.drawText(
+        `Meta: $${report.data?.targetAmount?.toLocaleString() || "0"}`,
+        {
+          x: 50,
+          y: yPositions.targetAmount,
+          size: 12,
+          font: helveticaFont,
+        }
+      );
+
+      page.drawText(
+        `Ahorrado: $${report.data?.currentAmount?.toLocaleString() || "0"}`,
+        {
+          x: 50,
+          y: yPositions.currentAmount,
+          size: 12,
+          font: helveticaFont,
+        }
+      );
+
+      const progress = (
+        (report.data?.currentAmount / report.data?.targetAmount) *
+        100
+      ).toFixed(2);
+      page.drawText(`Progreso: ${progress}%`, {
+        x: 50,
+        y: yPositions.progress,
+        size: 12,
+        font: helveticaFont,
+      });
+
+      page.drawText(
+        `Fecha límite: ${
+          report.data?.endDate
+            ? new Date(report.data.endDate).toLocaleDateString()
+            : "No disponible"
+        }`,
+        {
+          x: 50,
+          y: yPositions.endDate,
+          size: 12,
+          font: helveticaFont,
+        }
+      );
+
+      // Guardar el PDF modificado
+      const pdfBytes = await pdfDoc.save();
+      return Buffer.from(pdfBytes);
+    } catch (error) {
+      console.error("Error al generar el PDF de meta:", error);
+      throw new Error("No se pudo generar el PDF de meta");
+    }
   }
 
   private addHeader(doc: typeof PDFDocument) {

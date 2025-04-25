@@ -223,13 +223,24 @@ export class PgDebtRepository implements IDebtRepository {
 			pendingAmount: Number(raw.pending_amount),
 			dueDate: raw.due_date,
 			paid: raw.paid,
-			creditorId: raw.creditor_id || null,
-			categoryId: raw.category_id || null,
+			creditorId: raw.creditor_id,
+			categoryId: raw.category_id,
 			category: raw.category ? {
 				id: raw.category.id,
 				name: raw.category.name,
 				description: raw.category.description,
 			} : null,
+			creditor: raw.creditor ? {
+				id: raw.creditor.id,
+				name: raw.creditor.name,
+				email: raw.creditor.email,
+				username: raw.creditor.username,
+				passwordHash: raw.creditor.password_hash,
+				registrationDate: raw.creditor.registration_date,
+				active: raw.creditor.active,
+			} : null,
+			createdAt: raw.created_at,
+			updatedAt: raw.updated_at,
 		};
 	}
 }

@@ -37,19 +37,6 @@ const reportService = ReportServiceImpl.getInstance(
   csvService
 );
 
-const reportFiltersSchema = z
-  .object({
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-    categoryId: z.string().optional(),
-    userId: z.string().optional(),
-  })
-  .transform((data) => ({
-    ...data,
-    startDate: data.startDate ? new Date(data.startDate) : undefined,
-    endDate: data.endDate ? new Date(data.endDate) : undefined,
-  }));
-
 const generateReportHandler = createHandler(async (c: Context<AppBindings>) => {
   try {
     const { type, format, filters } = await c.req.json();
@@ -97,6 +84,29 @@ const getReportHandler = createHandler(async (c: Context<AppBindings>) => {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="report-${id}.pdf"`,
+        },
+      });
+    }
+
+    if (report.format === ReportFormat.EXCEL) {
+      const excelBuffer = await excelService.generateExcel(report);
+      return new Response(excelBuffer, {
+        status: HttpStatusCodes.OK,
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename="report-${id}.xlsx"`,
+        },
+      });
+    }
+
+    if (report.format === ReportFormat.CSV) {
+      const csvBuffer = await csvService.generateCSV(report);
+      return new Response(csvBuffer, {
+        status: HttpStatusCodes.OK,
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": `attachment; filename="report-${id}.csv"`,
         },
       });
     }

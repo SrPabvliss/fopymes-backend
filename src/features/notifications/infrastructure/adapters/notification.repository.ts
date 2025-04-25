@@ -148,6 +148,7 @@ export class PgNotificationRepository implements INotificationRepository {
       read: raw.read,
       type: raw.type as NotificationType,
       createdAt: raw.created_at,
+      updatedAt: raw.updated_at,
       expiresAt: raw.expires_at,
     };
   }

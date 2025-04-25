@@ -12,7 +12,7 @@ export class GoalApiAdapter {
 			target_amount: goal.targetAmount,
 			current_amount: goal.currentAmount,
 			end_date: goal.endDate,
-			contribution_frequency: goal.contributionFrequency,
+			contribution_frequency: Number(goal.contributionFrequency),
 			contribution_amount: Number(goal.contributionAmount),
 			category_id: goal.categoryId || null,
 			category: goal.category ? {
@@ -20,6 +20,8 @@ export class GoalApiAdapter {
 				name: goal.category.name,
 				description: goal.category.description || null,
 			} : null,
+			created_at: goal.createdAt,
+			updated_at: goal.updatedAt,
 		};
 	}
 
