@@ -16,18 +16,38 @@ import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-co
 import notifications from "@/notifications/infrastructure/controllers/notification.controller";
 import DatabaseConnection from "@/db";
 import email from "@/email/infrastructure/controllers/email.controller";
+import notificationSocket from "@/notifications/infrastructure/websocket/notification-socket.router";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 import { startNotificationsCleanupJob } from "./core/infrastructure/cron/expired-notifications.cron";
+import { startDebtNotificationsJob } from "./core/infrastructure/cron/debt-notifications.cron";
+import { startBudgetSummaryJob } from "./core/infrastructure/cron/budget-notifications.cron";
+import { startGoalNotificationsJob } from "./core/infrastructure/cron/goal-notifications.cron";
+import { startFinancialSuggestionsJob } from "./core/infrastructure/cron/financial-suggestions.cron";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
 import { recalculateContributionAmountCron } from "./core/infrastructure/cron/recalculate-contribution-amount.cron";
+import { CleanupReportsCron } from "./features/reports/infrastructure/cron/cleanup-reports.cron";
+import { ReportServiceImpl } from "./features/reports/application/services/report.service";
+import { PgReportRepository } from "./features/reports/infrastructure/adapters/report.repository";
+import { PgBudgetRepository } from "./features/budgets/infrastructure/adapters/budget.repository";
+import { PgTransactionRepository } from "./features/transactions/infrastructure/adapters/transaction.repository";
+import { PgGoalRepository } from "./features/goals/infrastucture/adapters/goal.repository";
+import { PgGoalContributionRepository } from "./features/goals/infrastucture/adapters/goal-contribution.repository";
+import { ExcelService } from "./features/reports/infrastructure/services/excel.service";
+import { CSVService } from "./features/reports/infrastructure/services/csv.service";
+import reports from "./features/reports/infrastructure/controllers/report.controller";
 
 const app = createApp();
 
 // startScheduledTransactionsJob();
 startNotificationsCleanupJob();
 recalculateContributionAmountCron.start();
+
+startDebtNotificationsJob();
+startBudgetSummaryJob();
+startGoalNotificationsJob();
+startFinancialSuggestionsJob();
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
@@ -75,6 +95,8 @@ const routes = [
   goalContributionSchedules,
   notifications,
   email,
+  reports,
+  notificationSocket,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
