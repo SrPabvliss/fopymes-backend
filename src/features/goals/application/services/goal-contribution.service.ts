@@ -15,9 +15,13 @@ import { ITransactionRepository } from "@/transactions/domain/ports/transaction-
 import { GoalContributionApiAdapter } from "@/goals/infrastucture/adapters/goal-contribution-api.adapter";
 import { GoalUtilsService } from "./goal-utils.service";
 import { IPaymentMethodRepository } from "@/payment-methods/domain/ports/payment-method-repository.port";
+import { GoalNotificationService } from "./goal-notification.service";
+import { GoalSuggestionService } from "./goal-suggestion.service";
 
 export class GoalContributionService implements IGoalContributionService {
   private static instance: GoalContributionService;
+  private goalNotificationService: GoalNotificationService;
+  private goalSuggestionService: GoalSuggestionService;
 
   constructor(
     private readonly goalContributionRepository: IGoalContributionRepository,
@@ -25,7 +29,10 @@ export class GoalContributionService implements IGoalContributionService {
     private readonly transactionRepository: ITransactionRepository,
     private readonly goalUtils: GoalUtilsService,
     private readonly paymentMethodRepository: IPaymentMethodRepository
-  ) {}
+  ) {
+    this.goalNotificationService = GoalNotificationService.getInstance();
+    this.goalSuggestionService = GoalSuggestionService.getInstance();
+  }
 
   public static getInstance(
     goalContributionRepository: IGoalContributionRepository,
@@ -148,7 +155,28 @@ export class GoalContributionService implements IGoalContributionService {
     amount: data.amount,
   });
 
-  await this.goalRepository.updateProgress(goal.id, data.amount);
+  // Store the previous amount before updating the goal
+  const previousAmount = goal.currentAmount;
+
+  // Update the goal progress
+  const updatedGoal = await this.goalRepository.updateProgress(goal.id, data.amount);
+
+  // Check and send progress milestone notifications
+  try {
+    await this.goalNotificationService.checkProgressMilestones(
+      updatedGoal,
+      previousAmount
+    );
+
+    // Generar sugerencias actualizadas después de crear un aporte
+    await this.goalSuggestionService.suggestWeeklySaving(updatedGoal);
+    
+    // Verificar si la meta está en riesgo
+    await this.goalSuggestionService.checkGoalAtRisk(updatedGoal);
+
+  } catch (error) {
+    console.error("Error sending goal progress notification or suggestions:", error);
+  }
 
   const transaction = await this.transactionRepository.create({
     userId: data.user_id,

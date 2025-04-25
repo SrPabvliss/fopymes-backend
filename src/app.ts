@@ -23,6 +23,7 @@ import { startDebtNotificationsJob } from "./core/infrastructure/cron/debt-notif
 import { startBudgetSummaryJob } from "./core/infrastructure/cron/budget-notifications.cron";
 import { startGoalNotificationsJob } from "./core/infrastructure/cron/goal-notifications.cron";
 import { startFinancialSuggestionsJob } from "./core/infrastructure/cron/financial-suggestions.cron";
+import { startGoalSuggestionsJob } from "./core/infrastructure/cron/goal-suggestions.cron";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
@@ -37,6 +38,7 @@ startDebtNotificationsJob();
 startBudgetSummaryJob();
 startGoalNotificationsJob();
 startFinancialSuggestionsJob();
+startGoalSuggestionsJob(); // Iniciar el nuevo trabajo cron de sugerencias
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
