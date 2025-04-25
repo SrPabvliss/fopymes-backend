@@ -51,6 +51,8 @@ export const transactionFiltersSchema = z.object({
   min_amount: z.coerce.number().optional(),
   max_amount: z.coerce.number().optional(),
   budget_id: z.coerce.number().int().positive().optional(),
+  debt_id: z.coerce.number().int().positive().optional(),
+  contribution_id: z.coerce.number().int().positive().optional(),
 });
 
 export type CreateTransactionDTO = z.infer<typeof createTransactionSchema>;

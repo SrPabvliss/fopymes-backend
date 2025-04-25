@@ -86,12 +86,24 @@ export class PgTransactionRepository implements ITransactionRepository {
 			);
 		}
 
+		if (filters.debt_id) {
+			conditions.push(eq(transactions.debt_id, filters.debt_id));
+		}
+	
+		if (filters.contribution_id) {
+		conditions.push(eq(transactions.contribution_id, filters.contribution_id));
+		}
+	
+		if (filters.budget_id) {
+		conditions.push(eq(transactions.budget_id, filters.budget_id));
+		}
+		
 		const result = await this.db
 			.select()
 			.from(transactions)
 			.where(and(...conditions))
 			.orderBy(transactions.date);
-
+		
 		return result.map(this.mapToEntity);
 	}
 
