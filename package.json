@@ -9,6 +9,7 @@
 		"db:refresh": "bun run db:clean && bun run db:seed"
 	},
 	"dependencies": {
+		"@getbrevo/brevo": "^2.2.0",
 		"@hono/zod-openapi": "^0.18.3",
 		"@scalar/hono-api-reference": "^0.5.162",
 		"date-fns": "^4.1.0",
