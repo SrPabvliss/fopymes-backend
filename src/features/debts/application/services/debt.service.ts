@@ -19,6 +19,7 @@ import { DebtApiAdapter } from "@/debts/infrastructure/adapters/debt-api.adapter
 import { IDebt } from "@/debts/domain/entities/IDebt";
 import { TransactionApiAdapter } from "@/transactions/infrastructure/adapters/transaction-api.adapter";
 import { DebtNotificationService } from "./debt-notification.service";
+import { IPaymentMethodRepository } from "@/payment-methods/domain/ports/payment-method-repository.port";
 
 export class DebtService implements IDebtService {
   private static instance: DebtService;
@@ -27,7 +28,8 @@ export class DebtService implements IDebtService {
   constructor(
     private readonly debtRepository: IDebtRepository,
     private readonly transactionRepository: ITransactionRepository,
-    private readonly debtUtils: DebtUtilsService
+    private readonly debtUtils: DebtUtilsService,
+    private readonly paymentMethodRepository: IPaymentMethodRepository
   ) {
     this.debtNotificationService = DebtNotificationService.getInstance();
   }
@@ -35,13 +37,15 @@ export class DebtService implements IDebtService {
   public static getInstance(
     debtRepository: IDebtRepository,
     transactionRepository: ITransactionRepository,
-    debtUtils: DebtUtilsService
+    debtUtils: DebtUtilsService,
+    paymentMethodRepository: IPaymentMethodRepository
   ): DebtService {
     if (!DebtService.instance) {
       DebtService.instance = new DebtService(
         debtRepository,
         transactionRepository,
-        debtUtils
+        debtUtils,
+        paymentMethodRepository
       );
     }
     return DebtService.instance;
@@ -299,7 +303,7 @@ export class DebtService implements IDebtService {
   payDebt = createHandler<PayDebtRoute>(async (c) => {
     const id = c.req.param("id");
     const userId = c.req.param("userId");
-    const { amount } = c.req.valid("json");
+    const { amount, payment_method_id, description } = c.req.valid("json");
 
     const validation = await this.debtUtils.validateDebt(
       Number(id),
@@ -320,12 +324,35 @@ export class DebtService implements IDebtService {
 
     const debt = validation.debt!;
 
-    await this.transactionRepository.create({
+    if (payment_method_id) {
+      const paymentMethodValid = await this.debtUtils.validatePaymentMethod(
+        payment_method_id,
+        Number(userId)
+      );
+
+      if (!paymentMethodValid) {
+        return c.json(
+          {
+            success: false,
+            data: null,
+            message: "Invalid payment method",
+          },
+          HttpStatusCodes.BAD_REQUEST
+        );
+      }
+    }
+
+    const transaction = await this.transactionRepository.create({
       userId: Number(userId),
       amount: amount,
       type: "EXPENSE",
-      categoryId: debt.categoryId || 0,
-      description: `Payment for debt: ${debt.description}`,
+      categoryId: debt.categoryId,
+      category: debt.category ?? null,
+      description: description || `Pago de deuda: ${debt.description}`,
+      paymentMethodId: payment_method_id || null,
+      paymentMethod: payment_method_id
+        ? await this.paymentMethodRepository.findById(payment_method_id)
+        : null,
       debtId: debt.id,
     });
 
@@ -337,7 +364,10 @@ export class DebtService implements IDebtService {
     return c.json(
       {
         success: true,
-        data: DebtApiAdapter.toApiResponse(updatedDebt),
+        data: {
+          ...DebtApiAdapter.toApiResponse(updatedDebt),
+          transaction: TransactionApiAdapter.toApiResponse(transaction),
+        },
         message: "Debt payment processed successfully",
       },
       HttpStatusCodes.OK

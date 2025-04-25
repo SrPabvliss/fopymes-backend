@@ -13,8 +13,8 @@ import {
 } from "@/goals/infrastucture/controllers/goal-contribution.route";
 import { ITransactionRepository } from "@/transactions/domain/ports/transaction-repository.port";
 import { GoalContributionApiAdapter } from "@/goals/infrastucture/adapters/goal-contribution-api.adapter";
-import { BudgetUtilsService } from "@/budgets/application/services/budget-utils.service";
 import { GoalUtilsService } from "./goal-utils.service";
+import { IPaymentMethodRepository } from "@/payment-methods/domain/ports/payment-method-repository.port";
 
 export class GoalContributionService implements IGoalContributionService {
   private static instance: GoalContributionService;
@@ -23,21 +23,24 @@ export class GoalContributionService implements IGoalContributionService {
     private readonly goalContributionRepository: IGoalContributionRepository,
     private readonly goalRepository: IGoalRepository,
     private readonly transactionRepository: ITransactionRepository,
-    private readonly goalUtils: GoalUtilsService
+    private readonly goalUtils: GoalUtilsService,
+    private readonly paymentMethodRepository: IPaymentMethodRepository
   ) {}
 
   public static getInstance(
     goalContributionRepository: IGoalContributionRepository,
     goalRepository: IGoalRepository,
     transactionRepository: ITransactionRepository,
-    goalUtils: GoalUtilsService
+    goalUtils: GoalUtilsService,
+    paymentMethodRepository: IPaymentMethodRepository
   ): GoalContributionService {
     if (!GoalContributionService.instance) {
       GoalContributionService.instance = new GoalContributionService(
         goalContributionRepository,
         goalRepository,
         transactionRepository,
-        goalUtils
+        goalUtils,
+        paymentMethodRepository
       );
     }
     return GoalContributionService.instance;
@@ -150,11 +153,13 @@ export class GoalContributionService implements IGoalContributionService {
   const transaction = await this.transactionRepository.create({
     userId: data.user_id,
     amount: data.amount,
-    type: "EXPENSE",
+    type: "INCOME",
     description: data.description || `Contribution to goal: ${goal.name}`,
     paymentMethodId: data.payment_method_id || null,
     contributionId: contribution.id,
     categoryId: goal.categoryId || null,
+    category: goal.category || null,
+    paymentMethod: data.payment_method_id ? await this.paymentMethodRepository.findById(data.payment_method_id) : null,
   });
 
   return c.json(

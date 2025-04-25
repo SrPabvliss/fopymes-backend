@@ -1,6 +1,6 @@
 import { and, between, eq, gte, lte, sql } from "drizzle-orm";
 import DatabaseConnection from "@/core/infrastructure/database";
-import { transactions } from "@/schema";
+import { transactions, categories, payment_methods } from "@/schema";
 import { ITransactionRepository } from "../../domain/ports/transaction-repository.port";
 import { ITransaction } from "../../domain/entities/ITransaction";
 import { TransactionFilters } from "../../application/dtos/transaction.dto";
@@ -20,22 +20,105 @@ export class PgTransactionRepository implements ITransactionRepository {
 	}
 
 	async findAll(): Promise<ITransaction[]> {
-		const result = await this.db.select().from(transactions);
+		const result = await this.db
+			.select({
+				id: transactions.id,
+				user_id: transactions.user_id,
+				amount: transactions.amount,
+				type: transactions.type,
+				category_id: transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: transactions.description,
+				payment_method_id: transactions.payment_method_id,
+				payment_method: {
+					id: payment_methods.id,
+					name: payment_methods.name,
+					type: payment_methods.type,
+					last_four_digits: payment_methods.last_four_digits,
+					user_id: payment_methods.user_id,
+				},
+				date: transactions.date,
+				scheduled_transaction_id: transactions.scheduled_transaction_id,
+				debt_id: transactions.debt_id,
+				budget_id: transactions.budget_id,
+				contribution_id: transactions.contribution_id,
+			})
+			.from(transactions)
+			.leftJoin(categories, eq(transactions.category_id, categories.id))
+			.leftJoin(payment_methods, eq(transactions.payment_method_id, payment_methods.id));
 		return result.map(this.mapToEntity);
 	}
 
 	async findById(id: number): Promise<ITransaction | null> {
 		const result = await this.db
-			.select()
+			.select({
+				id: transactions.id,
+				user_id: transactions.user_id,
+				amount: transactions.amount,
+				type: transactions.type,
+				category_id: transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: transactions.description,
+				payment_method_id: transactions.payment_method_id,
+				payment_method: {
+					id: payment_methods.id,
+					name: payment_methods.name,
+					type: payment_methods.type,
+					last_four_digits: payment_methods.last_four_digits,
+					user_id: payment_methods.user_id,
+				},
+				date: transactions.date,
+				scheduled_transaction_id: transactions.scheduled_transaction_id,
+				debt_id: transactions.debt_id,
+				budget_id: transactions.budget_id,
+				contribution_id: transactions.contribution_id,
+			})
 			.from(transactions)
+			.leftJoin(categories, eq(transactions.category_id, categories.id))
+			.leftJoin(payment_methods, eq(transactions.payment_method_id, payment_methods.id))
 			.where(eq(transactions.id, id));
 		return result[0] ? this.mapToEntity(result[0]) : null;
 	}
 
 	async findByUserId(userId: number): Promise<ITransaction[]> {
 		const result = await this.db
-			.select()
+			.select({
+				id: transactions.id,
+				user_id: transactions.user_id,
+				amount: transactions.amount,
+				type: transactions.type,
+				category_id: transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: transactions.description,
+				payment_method_id: transactions.payment_method_id,
+				payment_method: {
+					id: payment_methods.id,
+					name: payment_methods.name,
+					type: payment_methods.type,
+					last_four_digits: payment_methods.last_four_digits,
+					user_id: payment_methods.user_id,
+				},
+				date: transactions.date,
+				scheduled_transaction_id: transactions.scheduled_transaction_id,
+				debt_id: transactions.debt_id,
+				budget_id: transactions.budget_id,
+				contribution_id: transactions.contribution_id,
+			})
 			.from(transactions)
+			.leftJoin(categories, eq(transactions.category_id, categories.id))
+			.leftJoin(payment_methods, eq(transactions.payment_method_id, payment_methods.id))
 			.where(eq(transactions.user_id, userId));
 		return result.map(this.mapToEntity);
 	}
@@ -103,21 +186,48 @@ export class PgTransactionRepository implements ITransactionRepository {
 		if (filters.debt_id) {
 			conditions.push(eq(transactions.debt_id, filters.debt_id));
 		}
-	
+
 		if (filters.contribution_id) {
-		conditions.push(eq(transactions.contribution_id, filters.contribution_id));
+			conditions.push(eq(transactions.contribution_id, filters.contribution_id));
 		}
-	
+
 		if (filters.budget_id) {
-		conditions.push(eq(transactions.budget_id, filters.budget_id));
+			conditions.push(eq(transactions.budget_id, filters.budget_id));
 		}
-		
+
 		const result = await this.db
-			.select()
+			.select({
+				id: transactions.id,
+				user_id: transactions.user_id,
+				amount: transactions.amount,
+				type: transactions.type,
+				category_id: transactions.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				description: transactions.description,
+				payment_method_id: transactions.payment_method_id,
+				payment_method: {
+					id: payment_methods.id,
+					name: payment_methods.name,
+					type: payment_methods.type,
+					last_four_digits: payment_methods.last_four_digits,
+					user_id: payment_methods.user_id,
+				},
+				date: transactions.date,
+				scheduled_transaction_id: transactions.scheduled_transaction_id,
+				debt_id: transactions.debt_id,
+				budget_id: transactions.budget_id,
+				contribution_id: transactions.contribution_id,
+			})
 			.from(transactions)
+			.leftJoin(categories, eq(transactions.category_id, categories.id))
+			.leftJoin(payment_methods, eq(transactions.payment_method_id, payment_methods.id))
 			.where(and(...conditions))
 			.orderBy(transactions.date);
-		
+
 		return result.map(this.mapToEntity);
 	}
 
@@ -136,6 +246,8 @@ export class PgTransactionRepository implements ITransactionRepository {
 				scheduled_transaction_id:
 					transactionData.scheduledTransactionId || null,
 				debt_id: transactionData.debtId || null,
+				contribution_id: transactionData.contributionId || null,
+				budget_id: transactionData.budgetId || null,
 			})
 			.returning();
 
@@ -289,12 +401,25 @@ export class PgTransactionRepository implements ITransactionRepository {
 			amount: Number(raw.amount),
 			type: raw.type,
 			categoryId: raw.category_id,
+			category: raw.category ? {
+				id: raw.category.id,
+				name: raw.category.name,
+				description: raw.category.description,
+			} : null,
 			description: raw.description,
 			paymentMethodId: raw.payment_method_id,
+			paymentMethod: raw.payment_method ? {
+				id: raw.payment_method.id,
+				name: raw.payment_method.name,
+				type: raw.payment_method.type,
+				lastFourDigits: raw.payment_method.last_four_digits,
+				userId: raw.payment_method.user_id,
+			} : null,
 			date: raw.date,
 			scheduledTransactionId: raw.scheduled_transaction_id,
 			debtId: raw.debt_id,
-			budgetId: raw.budget_id, 
+			budgetId: raw.budget_id,
+			contributionId: raw.contribution_id,
 		};
 	}
 
@@ -356,24 +481,105 @@ export class PgTransactionRepository implements ITransactionRepository {
 
 	async findByDebtId(debtId: number): Promise<ITransaction[]> {
 		const result = await this.db
-		  .select()
+		  .select({
+			id: transactions.id,
+			user_id: transactions.user_id,
+			amount: transactions.amount,
+			type: transactions.type,
+			category_id: transactions.category_id,
+			category: {
+				id: categories.id,
+				name: categories.name,
+				description: categories.description,
+			},
+			description: transactions.description,
+			payment_method_id: transactions.payment_method_id,
+			payment_method: {
+				id: payment_methods.id,
+				name: payment_methods.name,
+				type: payment_methods.type,
+				last_four_digits: payment_methods.last_four_digits,
+				user_id: payment_methods.user_id,
+			},
+			date: transactions.date,
+			scheduled_transaction_id: transactions.scheduled_transaction_id,
+			debt_id: transactions.debt_id,
+			budget_id: transactions.budget_id,
+			contribution_id: transactions.contribution_id,
+		  })
 		  .from(transactions)
+		  .leftJoin(categories, eq(transactions.category_id, categories.id))
+		  .leftJoin(payment_methods, eq(transactions.payment_method_id, payment_methods.id))
 		  .where(eq(transactions.debt_id, debtId));
 		return result.map(this.mapToEntity);
 	  }
 	  
 	  async findByContributionId(contributionId: number): Promise<ITransaction[]> {
 		const result = await this.db
-		  .select()
+		  .select({
+			id: transactions.id,
+			user_id: transactions.user_id,
+			amount: transactions.amount,
+			type: transactions.type,
+			category_id: transactions.category_id,
+			category: {
+				id: categories.id,
+				name: categories.name,
+				description: categories.description,
+			},
+			description: transactions.description,
+			payment_method_id: transactions.payment_method_id,
+			payment_method: {
+				id: payment_methods.id,
+				name: payment_methods.name,
+				type: payment_methods.type,
+				last_four_digits: payment_methods.last_four_digits,
+				user_id: payment_methods.user_id,
+			},
+			date: transactions.date,
+			scheduled_transaction_id: transactions.scheduled_transaction_id,
+			debt_id: transactions.debt_id,
+			budget_id: transactions.budget_id,
+			contribution_id: transactions.contribution_id,
+		  })
 		  .from(transactions)
+		  .leftJoin(categories, eq(transactions.category_id, categories.id))
+		  .leftJoin(payment_methods, eq(transactions.payment_method_id, payment_methods.id))
 		  .where(eq(transactions.contribution_id, contributionId));
 		return result.map(this.mapToEntity);
 	  }
 	  
 	  async findByBudgetId(budgetId: number): Promise<ITransaction[]> {
 		const result = await this.db
-		  .select()
+		  .select({
+			id: transactions.id,
+			user_id: transactions.user_id,
+			amount: transactions.amount,
+			type: transactions.type,
+			category_id: transactions.category_id,
+			category: {
+				id: categories.id,
+				name: categories.name,
+				description: categories.description,
+			},
+			description: transactions.description,
+			payment_method_id: transactions.payment_method_id,
+			payment_method: {
+				id: payment_methods.id,
+				name: payment_methods.name,
+				type: payment_methods.type,
+				last_four_digits: payment_methods.last_four_digits,
+				user_id: payment_methods.user_id,
+			},
+			date: transactions.date,
+			scheduled_transaction_id: transactions.scheduled_transaction_id,
+			debt_id: transactions.debt_id,
+			budget_id: transactions.budget_id,
+			contribution_id: transactions.contribution_id,
+		  })
 		  .from(transactions)
+		  .leftJoin(categories, eq(transactions.category_id, categories.id))
+		  .leftJoin(payment_methods, eq(transactions.payment_method_id, payment_methods.id))
 		  .where(eq(transactions.budget_id, budgetId));
 		return result.map(this.mapToEntity);
 	  }

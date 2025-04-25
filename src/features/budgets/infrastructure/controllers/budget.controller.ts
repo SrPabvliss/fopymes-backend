@@ -5,14 +5,17 @@ import { BudgetUtilsService } from "@/budgets/application/services/budget-utils.
 import { BudgetService } from "@/budgets/application/services/budget.service";
 import { PgBudgetRepository } from "../adapters/budget.repository";
 import { PgTransactionRepository } from "@/transactions/infrastructure/adapters/transaction.repository";
+import { PgPaymentMethodRepository } from "@/payment-methods/infrastructure/adapters/payment-method.repository";
+
 const userRepository = PgUserRepository.getInstance();
 const budgetRepository = PgBudgetRepository.getInstance();
 const budgetUtils = BudgetUtilsService.getInstance(
 	budgetRepository,
 	userRepository
 );
+const paymentMethodRepository = PgPaymentMethodRepository.getInstance();
 const transactionRepository = PgTransactionRepository.getInstance();
-const budgetService = BudgetService.getInstance(budgetRepository, budgetUtils, transactionRepository);
+const budgetService = BudgetService.getInstance(budgetRepository, budgetUtils, transactionRepository, paymentMethodRepository);
 
 const router = createRouter()
 	.openapi(routes.list, budgetService.getAll)
