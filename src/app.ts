@@ -49,8 +49,19 @@ startDebtNotificationsJob();
 startBudgetSummaryJob();
 startGoalNotificationsJob();
 startFinancialSuggestionsJob();
-startGoalSuggestionsJob(); // Iniciar el nuevo trabajo cron de sugerencias
+startGoalSuggestionsJob();
 configureOpenAPI(app);
+
+// Configuración CORS mejorada
+app.use(
+  cors({
+    origin: ['http://localhost:3001', 'http://localhost:3000', '*'],
+    allowHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    credentials: true,
+    exposeHeaders: ['Content-Length', 'X-Kuma-Revision']
+  })
+);
 
 // agrega logs a la app, que logguee tambien el body de requests
 app.use(logger());
@@ -108,8 +119,6 @@ app.get("/debug/db-status", (c) => {
     timestamp: new Date().toISOString(),
   });
 });
-
-app.use(cors());
 
 routes.forEach((route) => {
   app.route("/", route);
