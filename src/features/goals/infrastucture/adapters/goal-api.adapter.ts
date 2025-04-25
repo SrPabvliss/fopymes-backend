@@ -15,6 +15,11 @@ export class GoalApiAdapter {
 			contribution_frequency: goal.contributionFrequency,
 			contribution_amount: Number(goal.contributionAmount),
 			category_id: goal.categoryId || null,
+			category: goal.category ? {
+				id: goal.category.id,
+				name: goal.category.name,
+				description: goal.category.description || null,
+			} : null,
 		};
 	}
 

@@ -2,8 +2,22 @@ import { budgets } from "@/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
+const categorySchema = z.object({
+	id: z.number(),
+	name: z.string(),
+	description: z.string().nullable(),
+});
+
 export const budgetBaseSchema = createInsertSchema(budgets);
-export const selectBudgetSchema = createSelectSchema(budgets);
+export const selectBudgetSchema = createSelectSchema(budgets)
+	.extend({
+		category: categorySchema.nullable(),
+	})
+	.transform((data) => ({
+		...data,
+		limit_amount: Number(data.limit_amount),
+		current_amount: Number(data.current_amount),
+	}));
 
 export const createBudgetSchema = budgetBaseSchema
 	.extend({
@@ -13,7 +27,7 @@ export const createBudgetSchema = budgetBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		month: z.string().date(),
+		month: z.coerce.date(),
 		shared_user_id: z.number().optional(),
 	})
 	.omit({
@@ -31,7 +45,7 @@ export const updateBudgetSchema = budgetBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		month: z.string().date().optional(),
+		month: z.coerce.date().optional(),
 		shared_user_id: z.number().optional().nullable(),
 	})
 	.partial()

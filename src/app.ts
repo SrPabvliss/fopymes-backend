@@ -13,18 +13,19 @@ import auth from "@/auth/infrastructure/controllers/auth.controller";
 import categories from "@/categories/infrastructure/controllers/category.controller";
 import goalContributions from "@/goals/infrastucture/controllers/goal-contribution.controller";
 import goalContributionSchedules from "@/goals/infrastucture/controllers/goal-contribution-schedule.controller";
+import notifications from "@/notifications/infrastructure/controllers/notification.controller";
 import DatabaseConnection from "@/db";
 import email from "@/email/infrastructure/controllers/email.controller";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
-import { recalculateContributionAmountCron } from "./core/infrastructure/cron/recalculate-contribution-amount.cron";
+import { startNotificationsCleanupJob } from "./core/infrastructure/cron/expired-notifications.cron";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createMiddleware } from "hono/factory";
 
 const app = createApp();
 
-startScheduledTransactionsJob();
-recalculateContributionAmountCron.start();
+// startScheduledTransactionsJob();
+startNotificationsCleanupJob();
 configureOpenAPI(app);
 
 // agrega logs a la app, que logguee tambien el body de requests
@@ -70,6 +71,7 @@ const routes = [
   categories,
   goalContributions,
   goalContributionSchedules,
+  notifications,
   email,
 ] as const;
 

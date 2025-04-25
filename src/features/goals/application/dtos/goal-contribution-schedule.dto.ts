@@ -3,7 +3,10 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const goalContributionScheduleBaseSchema = createInsertSchema(goal_contribution_schedule);
-export const selectGoalContributionScheduleSchema = createSelectSchema(goal_contribution_schedule);
+export const selectGoalContributionScheduleSchema = createSelectSchema(goal_contribution_schedule).transform((data) => ({
+  ...data,
+  amount: Number(data.amount),
+}));
 
 export const createGoalContributionScheduleSchema = goalContributionScheduleBaseSchema
   .extend({

@@ -173,6 +173,7 @@ export class DebtService implements IDebtService {
 			dueDate: new Date(data.due_date),
 			paid: false,
 			creditorId: data.creditor_id || null,
+			categoryId: data.category_id || null,
 		});
 
 		return c.json(
@@ -209,6 +210,8 @@ export class DebtService implements IDebtService {
 		if (data.due_date !== undefined)
 			updateData.dueDate = new Date(data.due_date);
 		if (data.paid !== undefined) updateData.paid = data.paid;
+		if (data.category_id !== undefined)
+			updateData.categoryId = data.category_id;
 
 		const updatedDebt = await this.debtRepository.update(
 			Number(id),

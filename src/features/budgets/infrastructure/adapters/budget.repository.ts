@@ -1,7 +1,7 @@
 import { eq, and, gte, lt, sql } from "drizzle-orm";
 import { getYear, getMonth } from "date-fns";
 import DatabaseConnection from "@/core/infrastructure/database";
-import { budgets } from "@/schema";
+import { budgets, categories } from "@/schema";
 import { IBudgetRepository } from "@/budgets/domain/ports/budget-repository.port";
 import { IBudget } from "@/budgets/domain/entities/IBudget";
 
@@ -19,14 +19,44 @@ export class PgBudgetRepository implements IBudgetRepository {
 	}
 
 	async findAll(): Promise<IBudget[]> {
-		const result = await this.db.select().from(budgets);
+		const result = await this.db
+			.select({
+				id: budgets.id,
+				user_id: budgets.user_id,
+				shared_user_id: budgets.shared_user_id,
+				category_id: budgets.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				limit_amount: budgets.limit_amount,
+				current_amount: budgets.current_amount,
+				month: budgets.month,
+			})
+			.from(budgets)
+			.leftJoin(categories, eq(budgets.category_id, categories.id));
 		return result.map(this.mapToEntity);
 	}
 
 	async findById(id: number): Promise<IBudget | null> {
 		const result = await this.db
-			.select()
+			.select({
+				id: budgets.id,
+				user_id: budgets.user_id,
+				shared_user_id: budgets.shared_user_id,
+				category_id: budgets.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				limit_amount: budgets.limit_amount,
+				current_amount: budgets.current_amount,
+				month: budgets.month,
+			})
 			.from(budgets)
+			.leftJoin(categories, eq(budgets.category_id, categories.id))
 			.where(eq(budgets.id, id));
 
 		return result[0] ? this.mapToEntity(result[0]) : null;
@@ -34,24 +64,48 @@ export class PgBudgetRepository implements IBudgetRepository {
 
 	async findByUserId(userId: number): Promise<IBudget[]> {
 		const result = await this.db
-			.select()
+			.select({
+				id: budgets.id,
+				user_id: budgets.user_id,
+				shared_user_id: budgets.shared_user_id,
+				category_id: budgets.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				limit_amount: budgets.limit_amount,
+				current_amount: budgets.current_amount,
+				month: budgets.month,
+			})
 			.from(budgets)
+			.leftJoin(categories, eq(budgets.category_id, categories.id))
 			.where(eq(budgets.user_id, userId));
 
 		return result.map(this.mapToEntity);
 	}
 
 	async findByUserIdAndMonth(userId: number, month: Date): Promise<IBudget[]> {
-		console.log(month.toISOString());
-
 		const year = month.getUTCFullYear();
 		const monthNumber = month.getUTCMonth() + 1;
 
-		console.log(year, monthNumber);
-
 		const result = await this.db
-			.select()
+			.select({
+				id: budgets.id,
+				user_id: budgets.user_id,
+				shared_user_id: budgets.shared_user_id,
+				category_id: budgets.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				limit_amount: budgets.limit_amount,
+				current_amount: budgets.current_amount,
+				month: budgets.month,
+			})
 			.from(budgets)
+			.leftJoin(categories, eq(budgets.category_id, categories.id))
 			.where(
 				and(
 					eq(budgets.user_id, userId),
@@ -65,23 +119,52 @@ export class PgBudgetRepository implements IBudgetRepository {
 
 	async findSharedWithUser(userId: number): Promise<IBudget[]> {
 		const result = await this.db
-			.select()
+			.select({
+				id: budgets.id,
+				user_id: budgets.user_id,
+				shared_user_id: budgets.shared_user_id,
+				category_id: budgets.category_id,
+				category: {
+					id: categories.id,
+					name: categories.name,
+					description: categories.description,
+				},
+				limit_amount: budgets.limit_amount,
+				current_amount: budgets.current_amount,
+				month: budgets.month,
+			})
 			.from(budgets)
+			.leftJoin(categories, eq(budgets.category_id, categories.id))
 			.where(eq(budgets.shared_user_id, userId));
 
 		return result.map(this.mapToEntity);
 	}
 
 	async create(budgetData: Omit<IBudget, "id">): Promise<IBudget> {
+		let categoryId = budgetData.categoryId;
+		if (!categoryId) {
+			const othersCategory = await this.db
+				.select()
+				.from(categories)
+				.where(eq(categories.name, "Otros"))
+				.limit(1);
+			
+			if (!othersCategory[0]) {
+				throw new Error("No se encontró la categoría 'Otros'");
+			}
+			
+			categoryId = othersCategory[0].id;
+		}
+
 		const result = await this.db
 			.insert(budgets)
 			.values({
 				user_id: budgetData.userId,
 				shared_user_id: budgetData.sharedUserId || null,
-				category_id: budgetData.categoryId,
+				category_id: categoryId,
 				limit_amount: budgetData.limitAmount.toString(),
 				current_amount: budgetData.currentAmount.toString(),
-				month: budgetData.month.toISOString(),
+				month: budgetData.month,
 			})
 			.returning();
 
@@ -98,7 +181,7 @@ export class PgBudgetRepository implements IBudgetRepository {
 		if (budgetData.currentAmount !== undefined)
 			updateData.current_amount = budgetData.currentAmount.toString();
 		if (budgetData.month !== undefined)
-			updateData.month = budgetData.month.toISOString();
+			updateData.month = budgetData.month;
 		if (budgetData.sharedUserId !== undefined)
 			updateData.shared_user_id = budgetData.sharedUserId;
 
@@ -143,6 +226,7 @@ export class PgBudgetRepository implements IBudgetRepository {
 			userId: raw.user_id,
 			sharedUserId: raw.shared_user_id,
 			categoryId: raw.category_id,
+			category: raw.category || null,
 			limitAmount: Number(raw.limit_amount),
 			currentAmount: Number(raw.current_amount),
 			month: new Date(raw.month),

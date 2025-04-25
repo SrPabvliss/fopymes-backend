@@ -1,3 +1,5 @@
+import { ICategory } from "@/categories/domain/entities/ICategory";
+
 export interface IGoal {
 	id: number;
 	userId: number;
@@ -9,4 +11,5 @@ export interface IGoal {
 	contributionFrequency: number;
 	contributionAmount: number;
 	categoryId?: number | null;
+	category?: ICategory | null;
 }
